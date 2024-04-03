@@ -18,6 +18,7 @@ namespace Colors
     const RgbColor GREEN = RgbColor(0, BRIGHTNESS, 0);
     const RgbColor BLUE = RgbColor(0, 0, BRIGHTNESS);
     const RgbColor MAGENTA = RgbColor(BRIGHTNESS, 0, BRIGHTNESS);
+    const RgbColor YELLOW = RgbColor(BRIGHTNESS, BRIGHTNESS / 2, 0);
     const RgbColor BLACK = RgbColor(0);
 
     const RgbColor VFR = GREEN;
@@ -27,8 +28,8 @@ namespace Colors
 
     const RgbColor LIGHTNING_FLASH = RgbColor(LIGHTNING_BRIGHTNESS);
 
-    const RgbColor INITIALIZING = BLUE;
-    const RgbColor CONNECTED_NO_DATA = MAGENTA;
+    const RgbColor INITIALIZING = GREEN;
+    const RgbColor CONNECTED_NO_DATA = YELLOW;
     const RgbColor DISCONNECTED = RED;
 }
 

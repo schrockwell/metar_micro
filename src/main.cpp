@@ -150,14 +150,11 @@ namespace Main
     for (int i = 0; i < _metarCount; i++)
     {
       metar_t metar = _metars[i];
+
+      _strip.SetPixelColor(metar.ledIndex, getCategoryColor(metar.category));
+
       Serial.print(metar.airportID + ": ");
-      category_t flightCategory = metar.category;
-      RgbColor color = getCategoryColor(flightCategory);
-      int ledIndex = metar.ledIndex;
-
-      _strip.SetPixelColor(ledIndex, color);
-
-      switch (flightCategory)
+      switch (metar.category)
       {
       case VFR:
         Serial.print("VFR");
