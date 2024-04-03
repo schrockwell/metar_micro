@@ -10,7 +10,9 @@ namespace Airports
         "",
         "KHFD",
         "KORD",
-        "KMCO"};
+        "KMCO",
+        "KNRB",
+        "KCRG"};
 
     const int COUNT = sizeof(IDs) / sizeof(IDs[0]);
 

@@ -33,7 +33,7 @@ namespace METARS
   void parseMETAR(String metarString, metar_t *metars, int metarCount)
   {
     // Split METAR into words
-    String words[20]; // Assuming a METAR won't have more than 20 words
+    String words[50]; // Assuming a METAR won't have more than 50 words
     int wordCount = 0;
     int startIndex = 0;
     for (int i = 0; i < metarString.length(); i++)
@@ -49,7 +49,7 @@ namespace METARS
       }
 
       // Ignore excessive words
-      if (wordCount >= 20)
+      if (wordCount >= 50)
       {
         break;
       }
@@ -99,6 +99,11 @@ namespace METARS
       if (words[i].startsWith("BKN") || words[i].startsWith("OVC"))
       {
         newMetar.ceiling = min(newMetar.ceiling, words[i].substring(3).toInt() * 100);
+      }
+
+      if (words[i].startsWith("LTG") || words[i] == "TS")
+      {
+        newMetar.lightning = true;
       }
     }
 

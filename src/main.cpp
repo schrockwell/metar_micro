@@ -22,6 +22,7 @@ void setup()
 void loop()
 {
   Main::loopMETARFetch();
+  Main::loopAnimate();
   Main::loopStatusLED();
 }
 
@@ -92,34 +93,85 @@ namespace Main
     }
   }
 
+  void loopAnimate()
+  {
+    if (_status != CONNECTED_WITH_DATA)
+    {
+      return;
+    }
+
+    // Lightning flashes
+    for (int i = 0; i < _metarCount; i++)
+    {
+      metar_t metar = _metars[i];
+      if (!metar.lightning || metar.category == NA)
+      {
+        continue;
+      }
+
+      bool flash = random(100) < 5;
+      if (flash)
+      {
+        _strip.SetPixelColor(metar.ledIndex, Colors::LIGHTNING_FLASH);
+      }
+      else
+      {
+        _strip.SetPixelColor(metar.ledIndex, getCategoryColor(metar.category));
+      }
+    }
+
+    _strip.Show();
+
+    // 10 FPS
+    delay(100);
+  }
+
+  RgbColor getCategoryColor(const category_t category)
+  {
+    switch (category)
+    {
+    case VFR:
+      return Colors::VFR;
+    case MVFR:
+      return Colors::MVFR;
+    case IFR:
+      return Colors::IFR;
+    case LIFR:
+      return Colors::LIFR;
+    case NA:
+      return Colors::BLACK;
+    }
+
+    return Colors::BLACK;
+  }
+
   void displayMETARs()
   {
     for (int i = 0; i < _metarCount; i++)
     {
       Serial.print(_metars[i].airportID + ": ");
       category_t flightCategory = _metars[i].category;
+      RgbColor color = getCategoryColor(flightCategory);
       int ledIndex = _metars[i].ledIndex;
+
+      _strip.SetPixelColor(ledIndex, color);
+
       switch (flightCategory)
       {
       case VFR:
         Serial.println("VFR");
-        _strip.SetPixelColor(ledIndex, Colors::VFR);
         break;
       case MVFR:
         Serial.println("MVFR");
-        _strip.SetPixelColor(ledIndex, Colors::MVFR);
         break;
       case IFR:
         Serial.println("IFR");
-        _strip.SetPixelColor(ledIndex, Colors::IFR);
         break;
       case LIFR:
         Serial.println("LIFR");
-        _strip.SetPixelColor(ledIndex, Colors::LIFR);
         break;
       case NA:
         Serial.println("N/A");
-        _strip.SetPixelColor(ledIndex, Colors::BLACK);
         break;
       }
     }
