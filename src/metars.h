@@ -7,9 +7,10 @@
 
 namespace METARS
 {
-    String parseAirportID(String metar);
-    category_t parseFlightCategory(String metar);
     category_t determineFlightCategory(int visibility, int ceiling);
+
+    void parseMETARs(String payload, metar_t *metars, int metarCount);
+    void parseMETAR(String metarString, metar_t *metars, int metarCount);
 }
 
 #endif

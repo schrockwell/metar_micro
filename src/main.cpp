@@ -11,9 +11,10 @@
 
 void setup()
 {
-  Main::setupStrip();
-
   Serial.begin(115200);
+
+  Main::setupMETARs();
+  Main::setupStrip();
 
   WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
 }
@@ -29,6 +30,26 @@ namespace Main
   NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> _strip(Airports::COUNT, Pins::NEOPIXEL);
 
   status_t _status = NEW;
+  metar_t _metars[Airports::COUNT];
+  int _metarCount;
+
+  void setupMETARs()
+  {
+    int metarIndex = 0;
+    for (int i = 0; i < Airports::COUNT; i++)
+    {
+      if (Airports::IDs[i] == "")
+      {
+        continue;
+      }
+
+      _metars[metarIndex].airportID = Airports::IDs[i];
+      _metars[metarIndex].ledIndex = i;
+      metarIndex++;
+    }
+
+    _metarCount = metarIndex;
+  }
 
   void setupStrip()
   {
@@ -49,73 +70,62 @@ namespace Main
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      String payload;
-
-      if (FAA::fetchMETARs(Airports::IDs, Airports::COUNT, payload))
+      if (FAA::fetchMETARs(_metars, _metarCount))
       {
-        displayMETARs(payload);
+        displayMETARs();
         setStatusLED(CONNECTED_WITH_DATA);
+        retryAfter = millis() + 300000; // Retry every 5 minutes
       }
       else
       {
+        Serial.println("WiFi connected, but bad response from FAA");
         setStatusLED(CONNECTED_NO_DATA);
+        retryAfter = millis() + 60000; // Retry every 60 seconds
       }
     }
     else
     {
+      Serial.println("Reconnecting to WiFi...");
       setStatusLED(DISCONNECTED);
+      WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
+      retryAfter = 0; // Retry immediately
     }
-
-    retryAfter = millis() + 60000; // Retry every minute
   }
 
-  void displayMETARs(String payload)
+  void displayMETARs()
   {
-    String metar = "";
-    for (int i = 0; i < payload.length(); i++)
+    for (int i = 0; i < _metarCount; i++)
     {
-      if (payload[i] == '\n')
+      Serial.print(_metars[i].airportID + ": ");
+      category_t flightCategory = _metars[i].category;
+      int ledIndex = _metars[i].ledIndex;
+      switch (flightCategory)
       {
-        displayMETAR(metar);
-        metar = "";
-      }
-      else
-      {
-        metar += payload[i];
+      case VFR:
+        Serial.println("VFR");
+        _strip.SetPixelColor(ledIndex, Colors::VFR);
+        break;
+      case MVFR:
+        Serial.println("MVFR");
+        _strip.SetPixelColor(ledIndex, Colors::MVFR);
+        break;
+      case IFR:
+        Serial.println("IFR");
+        _strip.SetPixelColor(ledIndex, Colors::IFR);
+        break;
+      case LIFR:
+        Serial.println("LIFR");
+        _strip.SetPixelColor(ledIndex, Colors::LIFR);
+        break;
+      case NA:
+        Serial.println("N/A");
+        _strip.SetPixelColor(ledIndex, Colors::BLACK);
+        break;
       }
     }
+    Serial.println("-----------------------------------");
 
     _strip.Show();
-  }
-
-  void displayMETAR(String metar)
-  {
-    String airportID = METARS::parseAirportID(metar);
-    int airportIndex = Airports::findAirportIndex(airportID);
-    if (airportIndex == -1)
-    {
-      return;
-    }
-
-    category_t flightCategory = METARS::parseFlightCategory(metar);
-    switch (flightCategory)
-    {
-    case VFR:
-      _strip.SetPixelColor(airportIndex, Colors::VFR);
-      break;
-    case MVFR:
-      _strip.SetPixelColor(airportIndex, Colors::MVFR);
-      break;
-    case IFR:
-      _strip.SetPixelColor(airportIndex, Colors::IFR);
-      break;
-    case LIFR:
-      _strip.SetPixelColor(airportIndex, Colors::LIFR);
-      break;
-    case NA:
-      _strip.SetPixelColor(airportIndex, Colors::BLACK);
-      break;
-    }
   }
 
   void setStatusLED(status_t newStatus)

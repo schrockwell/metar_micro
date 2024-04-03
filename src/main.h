@@ -10,13 +10,13 @@ void loop();
 
 namespace Main
 {
+    void setupMETARs();
     void setupStrip();
 
     void loopMETARFetch();
     void loopStatusLED();
 
-    void displayMETARs(String lines);
-    void displayMETAR(String metar);
+    void displayMETARs();
     void setStatusLED(status_t newStatus);
     void clearStrip();
 }

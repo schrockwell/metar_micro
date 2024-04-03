@@ -3,10 +3,12 @@
 
 #include <Arduino.h>
 
+#include "types.h"
+
 namespace FAA
 {
-    bool fetchMETARs(const String airportIDs[], const int numberOfAirports, String &metars);
-    String buildURL(const String baseURL, const String airportIDs[], const int numberOfAirports);
+    bool fetchMETARs(metar_t *metars, const int metarCount);
+    String buildURL(const String baseURL, const metar_t *metars, const int metarCount);
 }
 
 #endif

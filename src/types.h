@@ -19,4 +19,15 @@ enum status_t
     DISCONNECTED
 };
 
+struct metar_t
+{
+    String raw;
+    String airportID;
+    int visibility;
+    int ceiling;
+    category_t category;
+    bool lightning;
+    int ledIndex;
+};
+
 #endif

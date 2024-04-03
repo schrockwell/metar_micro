@@ -2,35 +2,50 @@
 
 namespace METARS
 {
-  String parseAirportID(String metar)
+  void parseMETARs(String payload, metar_t *metars, int metarCount)
   {
-    // Find the first space
-    int spaceIndex = metar.indexOf(' ');
-    if (spaceIndex == -1)
+    // Split payload into METARs
+    String metarStrings[metarCount];
+    int metarIndex = 0;
+    int startIndex = 0;
+    for (int i = 0; i < payload.length(); i++)
     {
-      return "";
+      if (payload[i] == '\n')
+      {
+        metarStrings[metarIndex++] = payload.substring(startIndex, i);
+        startIndex = i + 1;
+      }
+
+      // Ignore excessive METARs
+      if (metarIndex >= metarCount)
+      {
+        break;
+      }
     }
 
-    // Extract the airport ID
-    return metar.substring(0, spaceIndex);
+    // Parse each METAR
+    for (int i = 0; i < metarCount; i++)
+    {
+      parseMETAR(metarStrings[i], metars, metarCount);
+    }
   }
 
-  category_t parseFlightCategory(String metar)
+  void parseMETAR(String metarString, metar_t *metars, int metarCount)
   {
     // Split METAR into words
     String words[20]; // Assuming a METAR won't have more than 20 words
     int wordCount = 0;
     int startIndex = 0;
-    for (int i = 0; i < metar.length(); i++)
+    for (int i = 0; i < metarString.length(); i++)
     {
-      if (metar[i] == ' ')
+      if (metarString[i] == ' ')
       {
-        words[wordCount++] = metar.substring(startIndex, i);
+        words[wordCount++] = metarString.substring(startIndex, i);
         startIndex = i + 1;
       }
-      else if (i == metar.length() - 1)
+      else if (i == metarString.length() - 1)
       {
-        words[wordCount++] = metar.substring(startIndex);
+        words[wordCount++] = metarString.substring(startIndex);
       }
 
       // Ignore excessive words
@@ -40,9 +55,28 @@ namespace METARS
       }
     }
 
+    // Find the metar
+    int metarIndex = -1;
+    for (int i = 0; i < metarCount; i++)
+    {
+      if (metars[i].airportID == words[0])
+      {
+        metarIndex = i;
+        break;
+      }
+    }
+
+    if (metarIndex == -1)
+    {
+      return;
+    }
+
     // Extract information
-    int visibility = -1;
-    int ceiling = 10000; // Default to high value if not found
+    metar_t newMetar = metars[metarIndex];
+    newMetar.raw = metarString;
+    newMetar.visibility = -1;
+    newMetar.ceiling = 10000; // Default to high value if not found
+
     for (int i = 0; i < wordCount; i++)
     {
       // Check if the word contains "SM" for visibility
@@ -52,23 +86,26 @@ namespace METARS
         {
           // Visibility is in statute miles
           String substr = words[i].substring(0, words[i].length() - 2);
-          visibility = substr.toInt();
+          newMetar.visibility = substr.toInt();
         }
         else
         {
           // Visibility is in fractions of a mile
-          visibility = 0;
+          newMetar.visibility = 0;
         }
       }
 
       // Check for ceiling information
       if (words[i].startsWith("BKN") || words[i].startsWith("OVC"))
       {
-        ceiling = min(ceiling, words[i].substring(3).toInt() * 100);
+        newMetar.ceiling = min(newMetar.ceiling, words[i].substring(3).toInt() * 100);
       }
     }
 
-    return determineFlightCategory(visibility, ceiling);
+    newMetar.category = determineFlightCategory(newMetar.visibility, newMetar.ceiling);
+
+    // Update the array
+    metars[metarIndex] = newMetar;
   }
 
   category_t determineFlightCategory(int visibility, int ceiling)
