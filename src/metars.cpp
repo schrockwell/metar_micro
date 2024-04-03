@@ -90,8 +90,17 @@ namespace METARS
         }
         else
         {
-          // Visibility is in fractions of a mile
-          newMetar.visibility = 0;
+          int whole = words[i - 1].toInt();
+          if (whole <= 10)
+          {
+            // e.g. "1 3/4 SM" => 1.75 miles
+            newMetar.visibility = whole;
+          }
+          else
+          {
+            // e.g. "18006KT 1/4SM" => 0.25 miles
+            newMetar.visibility = 0;
+          }
         }
       }
 

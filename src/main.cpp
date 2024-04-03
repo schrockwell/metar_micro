@@ -149,31 +149,41 @@ namespace Main
   {
     for (int i = 0; i < _metarCount; i++)
     {
-      Serial.print(_metars[i].airportID + ": ");
-      category_t flightCategory = _metars[i].category;
+      metar_t metar = _metars[i];
+      Serial.print(metar.airportID + ": ");
+      category_t flightCategory = metar.category;
       RgbColor color = getCategoryColor(flightCategory);
-      int ledIndex = _metars[i].ledIndex;
+      int ledIndex = metar.ledIndex;
 
       _strip.SetPixelColor(ledIndex, color);
 
       switch (flightCategory)
       {
       case VFR:
-        Serial.println("VFR");
+        Serial.print("VFR");
         break;
       case MVFR:
-        Serial.println("MVFR");
+        Serial.print("MVFR");
         break;
       case IFR:
-        Serial.println("IFR");
+        Serial.print("IFR");
         break;
       case LIFR:
-        Serial.println("LIFR");
+        Serial.print("LIFR");
         break;
       case NA:
-        Serial.println("N/A");
+        Serial.print("N/A");
         break;
       }
+
+      Serial.print(" (" + String(metar.visibility) + " mi, " + String(metar.ceiling) + " ft");
+
+      if (metar.lightning)
+      {
+        Serial.print(", lightning");
+      }
+
+      Serial.println(")");
     }
     Serial.println("-----------------------------------");
 
