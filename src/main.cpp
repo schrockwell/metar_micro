@@ -5,6 +5,8 @@
 
 #include "airports.h"
 #include "constants.h"
+#include "main.h"
+#include "metars.h"
 #include "secrets.h"
 
 const char *BASE_URL = "https://aviationweather.gov/api/data/metar?format=raw&ids=";
@@ -116,112 +118,41 @@ void displayMETARS(String lines)
 
 void displayMETAR(String metar)
 {
-  // Split METAR into words
-  String words[20]; // Assuming a METAR won't have more than 20 words
-  int wordCount = 0;
-  int startIndex = 0;
-  for (int i = 0; i < metar.length(); i++)
-  {
-    if (metar[i] == ' ')
-    {
-      words[wordCount++] = metar.substring(startIndex, i);
-      startIndex = i + 1;
-    }
-    else if (i == metar.length() - 1)
-    {
-      words[wordCount++] = metar.substring(startIndex);
-    }
-
-    // Ignore excessive words
-    if (wordCount >= 20)
-    {
-      break;
-    }
-  }
-
-  // Extract information
-  String airportID = words[0];
-  int visibility = -1;
-  int ceiling = 10000; // Default to high value if not found
-  for (int i = 0; i < wordCount; i++)
-  {
-    // Check if the word contains "SM" for visibility
-    if (words[i].endsWith("SM"))
-    {
-      if (words[i].indexOf("/") == -1)
-      {
-        // Visibility is in statute miles
-        String substr = words[i].substring(0, words[i].length() - 2);
-        visibility = substr.toInt();
-      }
-      else
-      {
-        // Visibility is in fractions of a mile
-        visibility = 0;
-      }
-    }
-
-    // Check for ceiling information
-    if (words[i].startsWith("BKN") || words[i].startsWith("OVC"))
-    {
-      ceiling = min(ceiling, words[i].substring(3).toInt() * 100);
-    }
-  }
-
-  category_t flightCategory = getFlightCategory(visibility, ceiling);
-
+  String airportID = parseAirportID(metar);
   int airportIndex = findAirportIndex(airportID);
   if (airportIndex == -1)
   {
     return;
   }
 
+  category_t flightCategory = parseFlightCategory(metar);
   switch (flightCategory)
   {
   case VFR:
-    _strip.SetPixelColor(airportIndex, VFR_COLOR);
+    _strip.SetPixelColor(airportIndex, Colors::VFR);
     break;
   case MVFR:
-    _strip.SetPixelColor(airportIndex, MVFR_COLOR);
+    _strip.SetPixelColor(airportIndex, Colors::MVFR);
     break;
   case IFR:
-    _strip.SetPixelColor(airportIndex, IFR_COLOR);
+    _strip.SetPixelColor(airportIndex, Colors::IFR);
     break;
   case LIFR:
-    _strip.SetPixelColor(airportIndex, LIFR_COLOR);
+    _strip.SetPixelColor(airportIndex, Colors::LIFR);
     break;
   case NA:
-    _strip.SetPixelColor(airportIndex, BLACK);
+    _strip.SetPixelColor(airportIndex, Colors::BLACK);
     break;
-  }
-}
-
-category_t getFlightCategory(int visibility, int ceiling)
-{
-  if (visibility == -1)
-  {
-    return NA;
-  }
-  else if (visibility < 1 || ceiling < 500)
-  {
-    return LIFR;
-  }
-  else if (visibility < 3 || ceiling < 1000)
-  {
-    return IFR;
-  }
-  else if (visibility < 5 || ceiling < 3000)
-  {
-    return MVFR;
-  }
-  else
-  {
-    return VFR;
   }
 }
 
 int findAirportIndex(String airportID)
 {
+  if (airportID == "")
+  {
+    return -1;
+  }
+
   for (int i = 0; i < AIRPORT_COUNT; i++)
   {
     if (AIRPORTS[i] == airportID)
@@ -243,17 +174,17 @@ void setStatusLED(status_t newStatus)
   {
   case INITIALIZING:
     clearStrip();
-    _strip.SetPixelColor(STATUS_LED, INITIALIZING_COLOR);
+    _strip.SetPixelColor(STATUS_LED, Colors::INITIALIZING);
     _strip.Show();
     break;
   case CONNECTED_NO_DATA:
     clearStrip();
-    _strip.SetPixelColor(STATUS_LED, CONNECTED_NO_DATA_COLOR);
+    _strip.SetPixelColor(STATUS_LED, Colors::CONNECTED_NO_DATA);
     _strip.Show();
     break;
   case DISCONNECTED:
     clearStrip();
-    _strip.SetPixelColor(STATUS_LED, DISCONNECTED_COLOR);
+    _strip.SetPixelColor(STATUS_LED, Colors::DISCONNECTED);
     _strip.Show();
     break;
   }
@@ -269,13 +200,13 @@ void loopStatusLED()
   switch (_status)
   {
   case INITIALIZING:
-    _strip.SetPixelColor(STATUS_LED, on ? INITIALIZING_COLOR : BLACK);
+    _strip.SetPixelColor(STATUS_LED, on ? Colors::INITIALIZING : Colors::BLACK);
     break;
   case CONNECTED_NO_DATA:
-    _strip.SetPixelColor(STATUS_LED, on ? CONNECTED_NO_DATA_COLOR : BLACK);
+    _strip.SetPixelColor(STATUS_LED, on ? Colors::CONNECTED_NO_DATA : Colors::BLACK);
     break;
   case DISCONNECTED:
-    _strip.SetPixelColor(STATUS_LED, on ? DISCONNECTED_COLOR : BLACK);
+    _strip.SetPixelColor(STATUS_LED, on ? Colors::DISCONNECTED : Colors::BLACK);
     break;
   }
 
@@ -286,6 +217,6 @@ void clearStrip()
 {
   for (int i = 0; i < AIRPORT_COUNT; i++)
   {
-    _strip.SetPixelColor(i, BLACK);
+    _strip.SetPixelColor(i, Colors::BLACK);
   }
 }
