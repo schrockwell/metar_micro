@@ -3,10 +3,13 @@
 
 #include <Arduino.h>
 
-#include "constants.h"
+#include "types.h"
 
-String parseAirportID(String metar);
-category_t parseFlightCategory(String metar);
-category_t determineFlightCategory(int visibility, int ceiling);
+namespace METARS
+{
+    String parseAirportID(String metar);
+    category_t parseFlightCategory(String metar);
+    category_t determineFlightCategory(int visibility, int ceiling);
+}
 
 #endif

@@ -1,222 +1,178 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
 
 #include "airports.h"
 #include "constants.h"
+#include "faa.h"
 #include "main.h"
 #include "metars.h"
 #include "secrets.h"
 
-const char *BASE_URL = "https://aviationweather.gov/api/data/metar?format=raw&ids=";
-
-const uint8_t PIXEL_PIN = 16; // make sure to set this to the correct pin, ignored for Esp8266
-
-NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> _strip(AIRPORT_COUNT, PIXEL_PIN);
-
-status_t _status = NEW;
-
 void setup()
 {
-  _strip.Begin();
-  _strip.Show();
-  setStatusLED(INITIALIZING);
+  Main::setupStrip();
 
   Serial.begin(115200);
 
-  WiFi.begin(SSID, PASSWORD);
+  WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
 }
 
 void loop()
 {
-  loopMETARFetch();
-  loopStatusLED();
+  Main::loopMETARFetch();
+  Main::loopStatusLED();
 }
 
-void loopMETARFetch()
+namespace Main
 {
-  static unsigned long retryAfter = 0;
+  NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> _strip(Airports::COUNT, Pins::NEOPIXEL);
 
-  if (millis() < retryAfter)
+  status_t _status = NEW;
+
+  void setupStrip()
   {
-    return;
+    _strip.Begin();
+    _strip.Show();
+
+    setStatusLED(INITIALIZING);
   }
 
-  if (WiFi.status() == WL_CONNECTED)
+  void loopMETARFetch()
   {
-    HTTPClient http;
-    http.setInsecure(); // Allow https
+    static unsigned long retryAfter = 0;
 
-    Serial.println("Making request...");
-
-    String fullURL = buildURL(BASE_URL, AIRPORTS, AIRPORT_COUNT);
-    http.begin(fullURL);
-    int httpCode = http.GET();
-
-    if (httpCode > 0)
+    if (millis() < retryAfter)
     {
-      String payload = http.getString();
-      displayMETARS(payload);
-      Serial.println(payload);
+      return;
+    }
 
-      setStatusLED(CONNECTED_WITH_DATA);
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      String payload;
+
+      if (FAA::fetchMETARs(Airports::IDs, Airports::COUNT, payload))
+      {
+        displayMETARs(payload);
+        setStatusLED(CONNECTED_WITH_DATA);
+      }
+      else
+      {
+        setStatusLED(CONNECTED_NO_DATA);
+      }
     }
     else
     {
-      setStatusLED(CONNECTED_NO_DATA);
-      Serial.println("Error on HTTP request");
+      setStatusLED(DISCONNECTED);
     }
 
-    http.end();
-  }
-  else
-  {
-    setStatusLED(DISCONNECTED);
+    retryAfter = millis() + 60000; // Retry every minute
   }
 
-  retryAfter = millis() + 60000; // Retry every minute
-}
-
-String buildURL(const String baseURL, const String airportIDs[], const int numberOfAirports)
-{
-  String url = baseURL;
-  for (int i = 0; i < numberOfAirports; i++)
+  void displayMETARs(String payload)
   {
-    if (airportIDs[i] == "")
+    String metar = "";
+    for (int i = 0; i < payload.length(); i++)
     {
-      continue;
+      if (payload[i] == '\n')
+      {
+        displayMETAR(metar);
+        metar = "";
+      }
+      else
+      {
+        metar += payload[i];
+      }
     }
 
-    url += airportIDs[i];
-    if (i < numberOfAirports - 1)
-    {
-      url += ","; // Add a comma after each ID except the last one
-    }
-  }
-  return url;
-}
-
-void displayMETARS(String lines)
-{
-  String metar = "";
-  for (int i = 0; i < lines.length(); i++)
-  {
-    if (lines[i] == '\n')
-    {
-      displayMETAR(metar);
-      metar = "";
-    }
-    else
-    {
-      metar += lines[i];
-    }
-  }
-
-  _strip.Show();
-}
-
-void displayMETAR(String metar)
-{
-  String airportID = parseAirportID(metar);
-  int airportIndex = findAirportIndex(airportID);
-  if (airportIndex == -1)
-  {
-    return;
-  }
-
-  category_t flightCategory = parseFlightCategory(metar);
-  switch (flightCategory)
-  {
-  case VFR:
-    _strip.SetPixelColor(airportIndex, Colors::VFR);
-    break;
-  case MVFR:
-    _strip.SetPixelColor(airportIndex, Colors::MVFR);
-    break;
-  case IFR:
-    _strip.SetPixelColor(airportIndex, Colors::IFR);
-    break;
-  case LIFR:
-    _strip.SetPixelColor(airportIndex, Colors::LIFR);
-    break;
-  case NA:
-    _strip.SetPixelColor(airportIndex, Colors::BLACK);
-    break;
-  }
-}
-
-int findAirportIndex(String airportID)
-{
-  if (airportID == "")
-  {
-    return -1;
-  }
-
-  for (int i = 0; i < AIRPORT_COUNT; i++)
-  {
-    if (AIRPORTS[i] == airportID)
-    {
-      return i;
-    }
-  }
-  return -1;
-}
-
-void setStatusLED(status_t newStatus)
-{
-  if (_status == newStatus)
-  {
-    return;
-  }
-
-  switch (newStatus)
-  {
-  case INITIALIZING:
-    clearStrip();
-    _strip.SetPixelColor(STATUS_LED, Colors::INITIALIZING);
     _strip.Show();
-    break;
-  case CONNECTED_NO_DATA:
-    clearStrip();
-    _strip.SetPixelColor(STATUS_LED, Colors::CONNECTED_NO_DATA);
-    _strip.Show();
-    break;
-  case DISCONNECTED:
-    clearStrip();
-    _strip.SetPixelColor(STATUS_LED, Colors::DISCONNECTED);
-    _strip.Show();
-    break;
   }
 
-  _status = newStatus;
-}
-
-void loopStatusLED()
-{
-  // Flash every 500ms
-  bool on = millis() % 1000 < 500;
-
-  switch (_status)
+  void displayMETAR(String metar)
   {
-  case INITIALIZING:
-    _strip.SetPixelColor(STATUS_LED, on ? Colors::INITIALIZING : Colors::BLACK);
-    break;
-  case CONNECTED_NO_DATA:
-    _strip.SetPixelColor(STATUS_LED, on ? Colors::CONNECTED_NO_DATA : Colors::BLACK);
-    break;
-  case DISCONNECTED:
-    _strip.SetPixelColor(STATUS_LED, on ? Colors::DISCONNECTED : Colors::BLACK);
-    break;
+    String airportID = METARS::parseAirportID(metar);
+    int airportIndex = Airports::findAirportIndex(airportID);
+    if (airportIndex == -1)
+    {
+      return;
+    }
+
+    category_t flightCategory = METARS::parseFlightCategory(metar);
+    switch (flightCategory)
+    {
+    case VFR:
+      _strip.SetPixelColor(airportIndex, Colors::VFR);
+      break;
+    case MVFR:
+      _strip.SetPixelColor(airportIndex, Colors::MVFR);
+      break;
+    case IFR:
+      _strip.SetPixelColor(airportIndex, Colors::IFR);
+      break;
+    case LIFR:
+      _strip.SetPixelColor(airportIndex, Colors::LIFR);
+      break;
+    case NA:
+      _strip.SetPixelColor(airportIndex, Colors::BLACK);
+      break;
+    }
   }
 
-  _strip.Show();
-}
-
-void clearStrip()
-{
-  for (int i = 0; i < AIRPORT_COUNT; i++)
+  void setStatusLED(status_t newStatus)
   {
-    _strip.SetPixelColor(i, Colors::BLACK);
+    if (_status == newStatus)
+    {
+      return;
+    }
+
+    switch (newStatus)
+    {
+    case INITIALIZING:
+      clearStrip();
+      _strip.SetPixelColor(Pins::STATUS_LED, Colors::INITIALIZING);
+      _strip.Show();
+      break;
+    case CONNECTED_NO_DATA:
+      clearStrip();
+      _strip.SetPixelColor(Pins::STATUS_LED, Colors::CONNECTED_NO_DATA);
+      _strip.Show();
+      break;
+    case DISCONNECTED:
+      clearStrip();
+      _strip.SetPixelColor(Pins::STATUS_LED, Colors::DISCONNECTED);
+      _strip.Show();
+      break;
+    }
+
+    _status = newStatus;
+  }
+
+  void loopStatusLED()
+  {
+    // Flash every 500ms
+    bool on = millis() % 1000 < 500;
+
+    switch (_status)
+    {
+    case INITIALIZING:
+      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::INITIALIZING : Colors::BLACK);
+      break;
+    case CONNECTED_NO_DATA:
+      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::CONNECTED_NO_DATA : Colors::BLACK);
+      break;
+    case DISCONNECTED:
+      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::DISCONNECTED : Colors::BLACK);
+      break;
+    }
+
+    _strip.Show();
+  }
+
+  void clearStrip()
+  {
+    for (int i = 0; i < Airports::COUNT; i++)
+    {
+      _strip.SetPixelColor(i, Colors::BLACK);
+    }
   }
 }

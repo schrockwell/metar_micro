@@ -3,13 +3,18 @@
 
 #include <Arduino.h>
 
-const String AIRPORTS[] = {
-    "KBDL",
-    "",
-    "KHFD",
-    "KORD",
-    "KMCO"};
+namespace Airports
+{
+    const String IDs[] = {
+        "KBDL",
+        "",
+        "KHFD",
+        "KORD",
+        "KMCO"};
 
-const int AIRPORT_COUNT = sizeof(AIRPORTS) / sizeof(AIRPORTS[0]);
+    const int COUNT = sizeof(IDs) / sizeof(IDs[0]);
+
+    int findAirportIndex(String airportID);
+}
 
 #endif

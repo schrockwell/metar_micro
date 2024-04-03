@@ -3,19 +3,22 @@
 
 #include <Arduino.h>
 
-#include "constants.h"
+#include "types.h"
 
 void setup();
 void loop();
 
-void loopMETARFetch();
-String buildURL(const String baseURL, const String airportIDs[], const int numberOfAirports);
+namespace Main
+{
+    void setupStrip();
 
-void displayMETARS(String lines);
-void displayMETAR(String metar);
-int findAirportIndex(String airportID);
-void setStatusLED(status_t newStatus);
-void loopStatusLED();
-void clearStrip();
+    void loopMETARFetch();
+    void loopStatusLED();
+
+    void displayMETARs(String lines);
+    void displayMETAR(String metar);
+    void setStatusLED(status_t newStatus);
+    void clearStrip();
+}
 
 #endif
