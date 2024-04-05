@@ -4,6 +4,7 @@
 
 #include "airports.h"
 #include "constants.h"
+#include "inputs.h"
 #include "faa.h"
 #include "main.h"
 #include "metars.h"
@@ -15,12 +16,16 @@ void setup()
 
   Main::setupMETARs();
   Main::setupStrip();
+  Inputs::setup();
+
+  Main::loopInputs();
 
   WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
 }
 
 void loop()
 {
+  Main::loopInputs();
   Main::loopMETARFetch();
   Main::loopAnimate();
   Main::loopStatusLED();
@@ -32,6 +37,7 @@ namespace Main
 
   status_t _status = NEW;
   metar_t _metars[Airports::COUNT];
+  inputs_t _inputs;
   int _metarCount;
 
   void setupMETARs()
@@ -73,8 +79,8 @@ namespace Main
     {
       if (FAA::fetchMETARs(_metars, _metarCount))
       {
-        displayMETARs();
         setStatusLED(CONNECTED_WITH_DATA);
+        displayMETARs();
         retryAfter = millis() + 300000; // Retry every 5 minutes
       }
       else
@@ -95,6 +101,14 @@ namespace Main
 
   void loopAnimate()
   {
+    unsigned long animatedAt = 0;
+
+    // 10 FPS
+    if (millis() - animatedAt < 100)
+    {
+      return;
+    }
+
     if (_status != CONNECTED_WITH_DATA)
     {
       return;
@@ -112,18 +126,61 @@ namespace Main
       bool flash = random(100) < 5;
       if (flash)
       {
-        _strip.SetPixelColor(metar.ledIndex, Colors::LIGHTNING_FLASH);
+        setPixel(metar.ledIndex, Colors::LIGHTNING_FLASH);
       }
       else
       {
-        _strip.SetPixelColor(metar.ledIndex, getCategoryColor(metar.category));
+        setPixel(metar.ledIndex, getCategoryColor(metar.category));
       }
     }
 
     _strip.Show();
 
-    // 10 FPS
-    delay(100);
+    animatedAt = millis();
+  }
+
+  void loopInputs()
+  {
+    inputs_t prevInputs = _inputs;
+    _inputs = Inputs::read();
+
+    if (_inputs.windVisible != prevInputs.windVisible)
+    {
+      Serial.println("Wind visibility: " + String(_inputs.windVisible));
+    }
+
+    if (_inputs.lightningVisible != prevInputs.lightningVisible)
+    {
+      Serial.println("Lightning visibility: " + String(_inputs.lightningVisible));
+    }
+
+    if (_inputs.autoDimming != prevInputs.autoDimming)
+    {
+      Serial.println("Auto dimming: " + String(_inputs.autoDimming));
+    }
+
+    if (_inputs.wifiSetup != prevInputs.wifiSetup)
+    {
+      Serial.println("WiFi setup: " + String(_inputs.wifiSetup));
+    }
+
+    if (_inputs.ldr != prevInputs.ldr)
+    {
+      displayMETARs();
+      Serial.println("LDR: " + String(_inputs.ldr));
+    }
+
+    if (_inputs.brightness != prevInputs.brightness)
+    {
+      displayMETARs();
+      Serial.println("Brightness: " + String(_inputs.brightness));
+    }
+
+    if (_inputs.contrast != prevInputs.contrast)
+    {
+      displayMETARs();
+      Serial.println("Contrast: " + String(_inputs.contrast));
+    }
   }
 
   RgbColor getCategoryColor(const category_t category)
@@ -147,11 +204,16 @@ namespace Main
 
   void displayMETARs()
   {
+    if (_status != CONNECTED_WITH_DATA)
+    {
+      return;
+    }
+
     for (int i = 0; i < _metarCount; i++)
     {
       metar_t metar = _metars[i];
 
-      _strip.SetPixelColor(metar.ledIndex, getCategoryColor(metar.category));
+      setPixel(metar.ledIndex, getCategoryColor(metar.category));
 
       Serial.print(metar.airportID + ": ");
       switch (metar.category)
@@ -198,17 +260,17 @@ namespace Main
     {
     case INITIALIZING:
       clearStrip();
-      _strip.SetPixelColor(Pins::STATUS_LED, Colors::INITIALIZING);
+      setPixel(Pins::STATUS_LED, Colors::INITIALIZING);
       _strip.Show();
       break;
     case CONNECTED_NO_DATA:
       clearStrip();
-      _strip.SetPixelColor(Pins::STATUS_LED, Colors::CONNECTED_NO_DATA);
+      setPixel(Pins::STATUS_LED, Colors::CONNECTED_NO_DATA);
       _strip.Show();
       break;
     case DISCONNECTED:
       clearStrip();
-      _strip.SetPixelColor(Pins::STATUS_LED, Colors::DISCONNECTED);
+      setPixel(Pins::STATUS_LED, Colors::DISCONNECTED);
       _strip.Show();
       break;
     }
@@ -224,13 +286,13 @@ namespace Main
     switch (_status)
     {
     case INITIALIZING:
-      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::INITIALIZING : Colors::BLACK);
+      setPixel(Pins::STATUS_LED, on ? Colors::INITIALIZING : Colors::BLACK);
       break;
     case CONNECTED_NO_DATA:
-      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::CONNECTED_NO_DATA : Colors::BLACK);
+      setPixel(Pins::STATUS_LED, on ? Colors::CONNECTED_NO_DATA : Colors::BLACK);
       break;
     case DISCONNECTED:
-      _strip.SetPixelColor(Pins::STATUS_LED, on ? Colors::DISCONNECTED : Colors::BLACK);
+      setPixel(Pins::STATUS_LED, on ? Colors::DISCONNECTED : Colors::BLACK);
       break;
     }
 
@@ -241,7 +303,16 @@ namespace Main
   {
     for (int i = 0; i < Airports::COUNT; i++)
     {
-      _strip.SetPixelColor(i, Colors::BLACK);
+      setPixel(i, Colors::BLACK);
     }
+  }
+
+  void setPixel(int index, RgbColor color)
+  {
+    float userBrightness = _inputs.brightness * 1.2; // Give the user 20% extra brightness headroom
+    float roomDimness = (1.0 - _inputs.ldr) * _inputs.contrast;
+    uint8_t brightness = max(10, min(255, (userBrightness - roomDimness) * 255));
+
+    _strip.SetPixelColor(index, color.Dim(brightness));
   }
 }

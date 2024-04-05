@@ -16,12 +16,15 @@ namespace Main
     void loopMETARFetch();
     void loopStatusLED();
     void loopAnimate();
+    void loopInputs();
 
     void displayMETARs();
     void setStatusLED(status_t newStatus);
     void clearStrip();
 
     RgbColor getCategoryColor(const category_t category);
+
+    void setPixel(int index, RgbColor color);
 }
 
 #endif

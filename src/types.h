@@ -30,4 +30,16 @@ struct metar_t
     int ledIndex;
 };
 
+struct inputs_t
+{
+    bool windVisible;
+    bool lightningVisible;
+    bool autoDimming;
+    bool wifiSetup;
+
+    float ldr;
+    float brightness;
+    float contrast;
+};
+
 #endif
