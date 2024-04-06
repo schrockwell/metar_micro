@@ -63,9 +63,6 @@ namespace Main
   void setupStrip()
   {
     _strip.Begin();
-    _strip.Show();
-
-    _status = INITIALIZING;
   }
 
   void loopMETARFetch()
@@ -81,15 +78,16 @@ namespace Main
     {
       if (FAA::fetchMETARs(_metars, _metarCount))
       {
+        printMetars();
         _status = CONNECTED_WITH_DATA;
         _forceRedraw = true;
-        retryAfter = millis() + 300000; // Retry every 5 minutes
+        retryAfter = millis() + Config::METAR_FETCH_INTERVAL;
       }
       else
       {
         Serial.println("WiFi connected, but bad response from FAA");
         _status = CONNECTED_NO_DATA;
-        retryAfter = millis() + 60000; // Retry every 60 seconds
+        retryAfter = millis() + Config::METAR_RETRY_INTERVAL;
       }
     }
     else
@@ -97,7 +95,7 @@ namespace Main
       Serial.println("Reconnecting to WiFi...");
       _status = DISCONNECTED;
       WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
-      retryAfter = 0; // Retry immediately
+      retryAfter = millis() + Config::WIFI_RETRY_INTERVAL;
     }
   }
 
@@ -180,10 +178,7 @@ namespace Main
       roomDimness = (1.0 - _inputs.ldr) * _inputs.contrast;
     }
 
-    // float userBrightness = _inputs.brightness * 1.2; // Give the user 20% extra brightness headroom
-    // float roomDimness = (1.0 - _inputs.ldr) * _inputs.contrast;
-
-    uint8_t brightness = max(5, min(255, (userBrightness - roomDimness) * 255));
+    uint8_t brightness = max(Config::MIN_BRIGHTNESS, min(255, (userBrightness - roomDimness) * 255));
     _strip.SetPixelColor(index, color.Dim(brightness));
   }
 
@@ -224,7 +219,7 @@ namespace Main
     // - windy stations
     if (_status == CONNECTED_WITH_DATA)
     {
-      if (millis() - lastAnimateAt > 100)
+      if (millis() - lastAnimateAt > Config::ANIMATION_FRAME_DURATION)
       {
         drawAnimationFrame();
         lastAnimateAt = millis();
@@ -245,42 +240,7 @@ namespace Main
       metar_t metar = _metars[i];
 
       setStationPixel(metar.ledIndex, getCategoryColor(metar.category));
-
-      Serial.print(metar.airportID + ": ");
-      switch (metar.category)
-      {
-      case VFR:
-        Serial.print("VFR");
-        break;
-      case MVFR:
-        Serial.print("MVFR");
-        break;
-      case IFR:
-        Serial.print("IFR");
-        break;
-      case LIFR:
-        Serial.print("LIFR");
-        break;
-      case NA:
-        Serial.print("N/A");
-        break;
-      }
-
-      Serial.print(" (" + String(metar.visibility) + " mi, " +
-                   String(metar.ceiling) + " ft, " +
-                   String(metar.wind) + " gusting " +
-                   String(metar.windGust) + " kt");
-
-      if (metar.lightning)
-      {
-        Serial.print(", lightning");
-      }
-
-      Serial.println(")");
     }
-    Serial.println("-----------------------------------");
-
-    _strip.Show();
   }
 
   void drawAnimationFrame()
@@ -289,18 +249,17 @@ namespace Main
     for (int i = 0; i < _metarCount; i++)
     {
       metar_t metar = _metars[i];
-      if (max(metar.wind, metar.windGust) < 10)
+      if (max(metar.wind, metar.windGust) < Config::GUSTY_WIND_THRESHOLD)
       {
         continue;
       }
 
       if (_inputs.windVisible)
       {
-        // Wind flickering 20% of the frames
-        bool flashWind = random(100) < 20;
-        if (flashWind)
+        bool flicker = random(100) < Config::FLICKER_WIND_PERCENT;
+        if (flicker)
         {
-          RgbColor flickerColor = getCategoryColor(metar.category).Dim(128);
+          RgbColor flickerColor = getCategoryColor(metar.category).Dim(Config::FLICKER_WIND_DIMMING);
           setStationPixel(metar.ledIndex, flickerColor);
         }
         else
@@ -312,7 +271,6 @@ namespace Main
 
     if (_inputs.lightningVisible)
     {
-      // Lightning flashes 5% of the frames
       for (int i = 0; i < _metarCount; i++)
       {
         metar_t metar = _metars[i];
@@ -321,7 +279,7 @@ namespace Main
           continue;
         }
 
-        bool flash = random(100) < 5;
+        bool flash = random(100) < Config::FLASH_LIGHTNING_PERCENT;
         if (flash)
         {
           setStationPixel(metar.ledIndex, Colors::LIGHTNING_FLASH);
@@ -353,5 +311,56 @@ namespace Main
       setStationPixel(Pins::STATUS_LED, Colors::DISCONNECTED);
       break;
     }
+  }
+
+  void printMetars()
+  {
+    if (!Debug::PRINT_METARS)
+    {
+      return;
+    }
+
+    for (int i = 0; i < _metarCount; i++)
+    {
+      metar_t metar = _metars[i];
+
+      Serial.print(metar.airportID + ": ");
+      switch (metar.category)
+      {
+      case VFR:
+        Serial.print("VFR");
+        break;
+      case MVFR:
+        Serial.print("MVFR");
+        break;
+      case IFR:
+        Serial.print("IFR");
+        break;
+      case LIFR:
+        Serial.print("LIFR");
+        break;
+      case NA:
+        Serial.print("N/A");
+        break;
+      }
+
+      Serial.print(" (" + String(metar.visibility) + " mi, " +
+                   String(metar.ceiling) + " ft, " +
+                   String(metar.wind) + " kt ");
+
+      if (metar.windGust > 0)
+      {
+        Serial.print(" gusting " + String(metar.windGust) + " kt");
+      }
+
+      if (metar.lightning)
+      {
+        Serial.print(", lightning");
+      }
+
+      Serial.println(")");
+    }
+
+    Serial.println("-----------------------------------");
   }
 }

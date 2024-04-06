@@ -26,6 +26,8 @@ namespace Main
     RgbColor getCategoryColor(const category_t category);
 
     void setStationPixel(int index, RgbColor color);
+
+    void printMetars();
 }
 
 #endif

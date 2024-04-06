@@ -4,6 +4,11 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
 
+namespace Debug
+{
+    const bool PRINT_METARS = true;
+}
+
 namespace Pins
 {
     const uint STATUS_LED = 0;
@@ -40,6 +45,24 @@ namespace Colors
     const RgbColor INITIALIZING = GREEN;
     const RgbColor CONNECTED_NO_DATA = YELLOW;
     const RgbColor DISCONNECTED = RED;
+}
+
+namespace Config
+{
+    // Animation
+    const uint ANIMATION_FRAME_DURATION = 100; // ms
+    const uint GUSTY_WIND_THRESHOLD = 15;      // kt
+    const uint FLICKER_WIND_PERCENT = 20;      // %
+    const uint FLICKER_WIND_DIMMING = 128;     // 255 = original, 0 = black
+    const uint FLASH_LIGHTNING_PERCENT = 5;    // %
+
+    // LEDs
+    const uint MIN_BRIGHTNESS = 5; // out of 255
+
+    // Timing
+    const uint METAR_FETCH_INTERVAL = 300000; // 5 minutes (after successful fetch)
+    const uint METAR_RETRY_INTERVAL = 60000;  // 1 minute (after failed fetch)
+    const uint WIFI_RETRY_INTERVAL = 0;       // immediately (after failed connect)
 }
 
 #endif
