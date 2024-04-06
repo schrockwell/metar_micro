@@ -15,7 +15,8 @@ enum status_t
     INITIALIZING,
     CONNECTED_NO_DATA,
     CONNECTED_WITH_DATA,
-    DISCONNECTED
+    DISCONNECTED,
+    WIFI_SETUP
 };
 
 struct metar_t

@@ -21,13 +21,26 @@ namespace Inputs
 
     inputs_t read()
     {
+        static bool windVisible;
+        static bool lightningVisible;
+        static bool autoDimming;
+        static bool wifiSetup;
+        static unsigned long windVisibilePrevMillis = 0;
+        static unsigned long lightningVisiblePrevMillis = 0;
+        static unsigned long autoDimmingPrevMillis = 0;
+        static unsigned long wifiSetupPrevMillis = 0;
+
         inputs_t inputs;
 
-        // TODO: Debounce
-        inputs.windVisible = !digitalRead(Pins::DIP_WIND);
-        inputs.lightningVisible = !digitalRead(Pins::DIP_LIGHTNING);
-        inputs.autoDimming = !digitalRead(Pins::DIP_DIMMING);
-        inputs.wifiSetup = !digitalRead(Pins::DIP_WIFI_SETUP);
+        debounce(!digitalRead(Pins::DIP_WIND), windVisible, windVisibilePrevMillis);
+        debounce(!digitalRead(Pins::DIP_LIGHTNING), lightningVisible, lightningVisiblePrevMillis);
+        debounce(!digitalRead(Pins::DIP_DIMMING), autoDimming, autoDimmingPrevMillis);
+        debounce(!digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
+
+        inputs.windVisible = windVisible;
+        inputs.lightningVisible = lightningVisible;
+        inputs.autoDimming = autoDimming;
+        inputs.wifiSetup = wifiSetup;
 
         float ldr = analogRead(Pins::LDR) / 1024.0;
         float brightness = analogRead(Pins::BRIGHTNESS_POT) / 1024.0;
@@ -44,5 +57,17 @@ namespace Inputs
 
         _prevInputs = inputs;
         return inputs;
+    }
+
+    void debounce(bool value, bool &prevValue, unsigned long &prevMillis)
+    {
+        if (value != prevValue)
+        {
+            if (millis() - prevMillis > DEBOUNCE_DELAY)
+            {
+                prevValue = value;
+                prevMillis = millis();
+            }
+        }
     }
 }

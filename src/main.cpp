@@ -9,20 +9,20 @@
 #include "main.h"
 #include "metars.h"
 #include "secrets.h"
+#include "wifi_setup.h"
 
 void setup()
 {
   Serial.begin(115200);
 
+  Secrets::setup();
+  WifiSetup::setup();
   Main::setupMETARs();
   Main::setupStrip();
   Inputs::setup();
 
-  // Display the initial status
   Main::loopInputs();
   Main::loopRedraw();
-
-  WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
 }
 
 void loop()
@@ -30,6 +30,7 @@ void loop()
   Main::loopInputs();
   Main::loopMETARFetch();
   Main::loopRedraw();
+  Main::loopWifiSetup();
 }
 
 namespace Main
@@ -74,27 +75,34 @@ namespace Main
       return;
     }
 
+    if (_status == WIFI_SETUP)
+    {
+      return;
+    }
+
     if (WiFi.status() == WL_CONNECTED)
     {
       if (FAA::fetchMETARs(_metars, _metarCount))
       {
         printMetars();
-        _status = CONNECTED_WITH_DATA;
-        _forceRedraw = true;
+        setStatus(CONNECTED_WITH_DATA);
         retryAfter = millis() + Config::METAR_FETCH_INTERVAL;
       }
       else
       {
         Serial.println("WiFi connected, but bad response from FAA");
-        _status = CONNECTED_NO_DATA;
+        setStatus(CONNECTED_NO_DATA);
         retryAfter = millis() + Config::METAR_RETRY_INTERVAL;
       }
     }
     else
     {
       Serial.println("Reconnecting to WiFi...");
-      _status = DISCONNECTED;
-      WiFi.begin(Secrets::SSID, Secrets::PASSWORD);
+      setStatus(DISCONNECTED);
+      String ssid;
+      String password;
+      Secrets::readWiFiCredentials(ssid, password);
+      WiFi.begin(ssid.c_str(), password.c_str());
       retryAfter = millis() + Config::WIFI_RETRY_INTERVAL;
     }
   }
@@ -103,6 +111,20 @@ namespace Main
   {
     inputs_t prevInputs = _inputs;
     _inputs = Inputs::read();
+
+    if (_inputs.wifiSetup != prevInputs.wifiSetup)
+    {
+      if (_inputs.wifiSetup)
+      {
+        setStatus(WIFI_SETUP);
+        WifiSetup::begin();
+      }
+      else
+      {
+        WifiSetup::end();
+        setStatus(INITIALIZING);
+      }
+    }
 
     if (_inputs.windVisible != prevInputs.windVisible)
     {
@@ -137,6 +159,14 @@ namespace Main
     if (_inputs.contrast != prevInputs.contrast)
     {
       Serial.println("Contrast: " + String(_inputs.contrast));
+    }
+  }
+
+  void loopWifiSetup()
+  {
+    if (_status == WIFI_SETUP)
+    {
+      WifiSetup::loop();
     }
   }
 
@@ -310,6 +340,10 @@ namespace Main
       Serial.println("DISCONNECTED");
       setStationPixel(Pins::STATUS_LED, Colors::DISCONNECTED);
       break;
+    case WIFI_SETUP:
+      Serial.println("WIFI_SETUP");
+      setStationPixel(Pins::STATUS_LED, Colors::WIFI_SETUP);
+      break;
     }
   }
 
@@ -362,5 +396,11 @@ namespace Main
     }
 
     Serial.println("-----------------------------------");
+  }
+
+  void setStatus(status_t status)
+  {
+    _status = status;
+    _forceRedraw = true;
   }
 }
