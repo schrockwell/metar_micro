@@ -33,14 +33,14 @@ namespace Inputs
         float brightness = analogRead(Pins::BRIGHTNESS_POT) / 1024.0;
         float contrast = analogRead(Pins::CONTRAST_POT) / 1024.0;
 
-        // LDR: 1% change threshold
-        inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.01) ? ldr : _prevInputs.ldr;
+        // LDR: 5% change threshold
+        inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.05) ? ldr : _prevInputs.ldr;
 
-        // Brightness pot: 1% change threshold
-        inputs.brightness = (abs(brightness - _prevInputs.brightness) > 0.01) ? brightness : _prevInputs.brightness;
+        // Brightness pot: 5% change threshold
+        inputs.brightness = (abs(brightness - _prevInputs.brightness) > 0.05) ? brightness : _prevInputs.brightness;
 
-        // Contrast: 1% change threshold
-        inputs.contrast = (abs(contrast - _prevInputs.contrast) > 0.01) ? contrast : _prevInputs.contrast;
+        // Contrast: 5% change threshold
+        inputs.contrast = (abs(contrast - _prevInputs.contrast) > 0.05) ? contrast : _prevInputs.contrast;
 
         _prevInputs = inputs;
         return inputs;

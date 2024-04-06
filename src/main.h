@@ -14,17 +14,18 @@ namespace Main
     void setupStrip();
 
     void loopMETARFetch();
-    void loopStatusLED();
-    void loopAnimate();
+    void loopRedraw();
     void loopInputs();
 
-    void displayMETARs();
-    void setStatusLED(status_t newStatus);
+    void drawMETARs();
+    void drawAnimationFrame();
+    void drawStatus();
+
     void clearStrip();
 
     RgbColor getCategoryColor(const category_t category);
 
-    void setPixel(int index, RgbColor color);
+    void setStationPixel(int index, RgbColor color);
 }
 
 #endif

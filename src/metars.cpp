@@ -114,6 +114,23 @@ namespace METARS
       {
         newMetar.lightning = true;
       }
+
+      // Get wind
+      if (words[i].endsWith("KT"))
+      {
+        // Use gust wind if available
+        if (words[i].indexOf("G") != -1)
+        {
+          int slashIndex = words[i].indexOf("G");
+          newMetar.wind = words[i].substring(3, slashIndex).toInt();
+          newMetar.windGust = words[i].substring(slashIndex + 1, words[i].length() - 2).toInt();
+        }
+        else
+        {
+          newMetar.wind = words[i].substring(3, words[i].length() - 2).toInt();
+          newMetar.windGust = 0;
+        }
+      }
     }
 
     newMetar.category = determineFlightCategory(newMetar.visibility, newMetar.ceiling);

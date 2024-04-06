@@ -12,7 +12,6 @@ enum category_t
 
 enum status_t
 {
-    NEW,
     INITIALIZING,
     CONNECTED_NO_DATA,
     CONNECTED_WITH_DATA,
@@ -28,6 +27,8 @@ struct metar_t
     category_t category;
     bool lightning;
     int ledIndex;
+    int wind;
+    int windGust;
 };
 
 struct inputs_t
