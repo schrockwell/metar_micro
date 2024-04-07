@@ -48,8 +48,7 @@ namespace WifiSetup
 
     void handleForm()
     {
-        const String html = F("<!DOCTYPE html><html><body><h1>WiFi Setup</h1><form method=\"post\">SSID:<br><input type=\"text\" name=\"ssid\"><br>Password:<br><input type=\"password\" name=\"password\"><br><br><input type=\"submit\" value=\"Submit\"></form></body></html>");
-        _server.send(200, "text/html", html);
+        _server.send(200, "text/html", String(HEADER_HTML) + String(INDEX_HTML) + String(FOOTER_HTML));
     }
 
     void handlePost()
@@ -63,11 +62,11 @@ namespace WifiSetup
         if (ssid.length() > 0 && password.length() > 0)
         {
             Secrets::writeWiFiCredentials(ssid, password);
-            _server.send(200, "text/plain", "Saved. You can switch back to normal mode now.");
+            _server.send(200, "text/html", String(HEADER_HTML) + String(SUCCESS_HTML) + String(FOOTER_HTML));
         }
         else
         {
-            _server.send(400, "text/plain", "Invalid");
+            _server.send(400, "text/html", String(HEADER_HTML) + String(ERROR_HTML) + String(FOOTER_HTML));
         }
     }
 }
