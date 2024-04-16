@@ -1,4 +1,5 @@
 #include "airports.h"
+#include "boards.h"
 
 namespace Airports
 {
@@ -9,9 +10,9 @@ namespace Airports
             return -1;
         }
 
-        for (int i = 0; i < COUNT; i++)
+        for (int i = 0; i < Airports::COUNT; i++)
         {
-            if (IDs[i] == airportID)
+            if (Airports::IDs[i] == airportID)
             {
                 return i;
             }

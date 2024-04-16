@@ -3,12 +3,14 @@
 #include <WiFi.h>
 
 #include "airports.h"
+#include "boards.h"
 #include "constants.h"
 #include "inputs.h"
 #include "faa.h"
 #include "main.h"
 #include "metars.h"
 #include "secrets.h"
+#include "util.h"
 #include "wifi_setup.h"
 
 void setup()
@@ -35,7 +37,7 @@ void loop()
 
 namespace Main
 {
-  NeoPixelBus<NeoRgbFeature, NeoWs2812xMethod> _strip(Airports::COUNT, Pins::NEOPIXEL);
+  NeoPixelBus<NEOPIXEL_ORDERING, NeoWs2812xMethod> _strip(Airports::COUNT, Pins::NEOPIXEL);
 
   status_t _status = INITIALIZING;
   metar_t _metars[Airports::COUNT];
@@ -199,6 +201,11 @@ namespace Main
 
   void setStationPixel(int index, RgbColor color)
   {
+    _strip.SetPixelColor(index, color.Dim(getDesiredBrightness()));
+  }
+
+  uint8_t getDesiredBrightness()
+  {
     float userBrightness = _inputs.brightness;
     float roomDimness = 0.0;
 
@@ -208,8 +215,7 @@ namespace Main
       roomDimness = (1.0 - _inputs.ldr) * _inputs.contrast;
     }
 
-    uint8_t brightness = max(Config::MIN_BRIGHTNESS, min(255, (userBrightness - roomDimness) * 255));
-    _strip.SetPixelColor(index, color.Dim(brightness));
+    return clamp((userBrightness - roomDimness) * (float)Features::MAX_BRIGHTNESS, Features::MIN_BRIGHTNESS, Features::MAX_BRIGHTNESS);
   }
 
   void loopRedraw()

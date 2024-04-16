@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "constants.h"
+#include "boards.h"
 #include "inputs.h"
 
 namespace Inputs
@@ -14,9 +15,20 @@ namespace Inputs
         pinMode(Pins::DIP_DIMMING, INPUT_PULLUP);
         pinMode(Pins::DIP_WIFI_SETUP, INPUT_PULLUP);
 
-        pinMode(Pins::LDR, INPUT);
-        pinMode(Pins::BRIGHTNESS_POT, INPUT);
-        pinMode(Pins::CONTRAST_POT, INPUT);
+        if (Features::BRIGHTNESS_POT)
+        {
+            pinMode(Pins::BRIGHTNESS_POT, INPUT);
+        }
+
+        if (Features::CONTRAST_POT)
+        {
+            pinMode(Pins::CONTRAST_POT, INPUT);
+        }
+
+        if (Features::LDR)
+        {
+            pinMode(Pins::LDR, INPUT);
+        }
     }
 
     inputs_t read()
@@ -37,14 +49,14 @@ namespace Inputs
         debounce(!digitalRead(Pins::DIP_DIMMING), autoDimming, autoDimmingPrevMillis);
         debounce(!digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
 
-        inputs.windVisible = windVisible;
-        inputs.lightningVisible = lightningVisible;
-        inputs.autoDimming = autoDimming;
-        inputs.wifiSetup = wifiSetup;
+        inputs.windVisible = windVisible || Features::FORCE_WINDS;
+        inputs.lightningVisible = lightningVisible || Features::FORCE_LIGHTNING;
+        inputs.autoDimming = autoDimming || Features::FORCE_DIMMING;
+        inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
 
-        float ldr = analogRead(Pins::LDR) / 1024.0;
-        float brightness = analogRead(Pins::BRIGHTNESS_POT) / 1024.0;
-        float contrast = analogRead(Pins::CONTRAST_POT) / 1024.0;
+        float ldr = Features::LDR ? analogRead(Pins::LDR) / 1024.0 : Features::DEFAULT_LDR;
+        float brightness = Features::BRIGHTNESS_POT ? analogRead(Pins::BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_BRIGHTNESS;
+        float contrast = Features::CONTRAST_POT ? analogRead(Pins::CONTRAST_POT) / 1024.0 : Features::DEFAULT_CONTRAST;
 
         // LDR: 5% change threshold
         inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.05) ? ldr : _prevInputs.ldr;

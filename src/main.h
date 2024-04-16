@@ -26,6 +26,7 @@ namespace Main
     void drawStatus();
 
     // LEDs
+    uint8_t getDesiredBrightness();
     void setStatus(status_t status);
     void clearStrip();
     RgbColor getCategoryColor(const category_t category);

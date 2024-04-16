@@ -9,20 +9,6 @@ namespace Debug
     static const bool PRINT_METARS = true;
 }
 
-namespace Pins
-{
-    static const uint STATUS_LED = 0;
-    static const uint NEOPIXEL = 16;
-    static const uint BRIGHTNESS_POT = A1;
-    static const uint CONTRAST_POT = A0;
-    static const uint LDR = A2;
-
-    static const uint DIP_WIND = 5;
-    static const uint DIP_LIGHTNING = 6;
-    static const uint DIP_DIMMING = 7;
-    static const uint DIP_WIFI_SETUP = 8;
-}
-
 namespace Colors
 {
     static const uint8_t BRIGHTNESS = 255; // out of 255
@@ -56,9 +42,6 @@ namespace Config
     static const uint FLICKER_WIND_PERCENT = 20;      // %
     static const uint FLICKER_WIND_DIMMING = 128;     // 255 = original, 0 = black
     static const uint FLASH_LIGHTNING_PERCENT = 5;    // %
-
-    // LEDs
-    static const uint MIN_BRIGHTNESS = 5; // out of 255
 
     // Timing
     static const uint METAR_FETCH_INTERVAL = 300000; // 5 minutes (after successful fetch)
