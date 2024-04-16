@@ -44,6 +44,7 @@ namespace Main
   inputs_t _inputs;
   bool _forceRedraw = true;
   int _metarCount;
+  unsigned long _retryFetchAfter = 0;
 
   void setupMETARs()
   {
@@ -70,9 +71,8 @@ namespace Main
 
   void loopMETARFetch()
   {
-    static unsigned long retryAfter = 0;
 
-    if (millis() < retryAfter)
+    if (millis() < _retryFetchAfter)
     {
       return;
     }
@@ -88,13 +88,13 @@ namespace Main
       {
         printMetars();
         setStatus(CONNECTED_WITH_DATA);
-        retryAfter = millis() + Config::METAR_FETCH_INTERVAL;
+        _retryFetchAfter = millis() + Config::METAR_FETCH_INTERVAL;
       }
       else
       {
         Serial.println("WiFi connected, but bad response from FAA");
         setStatus(CONNECTED_NO_DATA);
-        retryAfter = millis() + Config::METAR_RETRY_INTERVAL;
+        _retryFetchAfter = millis() + Config::METAR_RETRY_INTERVAL;
       }
     }
     else
@@ -105,7 +105,7 @@ namespace Main
       String password;
       Secrets::readWiFiCredentials(ssid, password);
       WiFi.begin(ssid.c_str(), password.c_str());
-      retryAfter = millis() + Config::WIFI_RETRY_INTERVAL;
+      _retryFetchAfter = millis() + Config::WIFI_RETRY_INTERVAL;
     }
   }
 
@@ -125,6 +125,7 @@ namespace Main
       {
         WifiSetup::end();
         setStatus(INITIALIZING);
+        _retryFetchAfter = 0;
       }
     }
 
