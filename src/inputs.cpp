@@ -15,14 +15,14 @@ namespace Inputs
         pinMode(Pins::DIP_DIMMING, INPUT_PULLUP);
         pinMode(Pins::DIP_WIFI_SETUP, INPUT_PULLUP);
 
-        if (Features::BRIGHTNESS_POT)
+        if (Features::MAX_BRIGHTNESS_POT)
         {
-            pinMode(Pins::BRIGHTNESS_POT, INPUT);
+            pinMode(Pins::MAX_BRIGHTNESS_POT, INPUT);
         }
 
-        if (Features::CONTRAST_POT)
+        if (Features::MIN_BRIGHTNESS_POT)
         {
-            pinMode(Pins::CONTRAST_POT, INPUT);
+            pinMode(Pins::MIN_BRIGHTNESS_POT, INPUT);
         }
 
         if (Features::LDR)
@@ -55,17 +55,15 @@ namespace Inputs
         inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
 
         float ldr = Features::LDR ? analogRead(Pins::LDR) / 1024.0 : Features::DEFAULT_LDR;
-        float brightness = Features::BRIGHTNESS_POT ? analogRead(Pins::BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_BRIGHTNESS;
-        float contrast = Features::CONTRAST_POT ? analogRead(Pins::CONTRAST_POT) / 1024.0 : Features::DEFAULT_CONTRAST;
+        float maxBrightness = Features::MAX_BRIGHTNESS_POT ? analogRead(Pins::MAX_BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_MAX_BRIGHTNESS;
+        float minBrightness = Features::MIN_BRIGHTNESS_POT ? analogRead(Pins::MIN_BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_MIN_BRIGHTNESS;
 
         // LDR: 5% change threshold
         inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.05) ? ldr : _prevInputs.ldr;
 
-        // Brightness pot: 5% change threshold
-        inputs.brightness = (abs(brightness - _prevInputs.brightness) > 0.05) ? brightness : _prevInputs.brightness;
-
-        // Contrast: 5% change threshold
-        inputs.contrast = (abs(contrast - _prevInputs.contrast) > 0.05) ? contrast : _prevInputs.contrast;
+        // Brightness pots: 5% change threshold
+        inputs.maxBrightness = (abs(maxBrightness - _prevInputs.maxBrightness) > 0.05) ? maxBrightness : _prevInputs.maxBrightness;
+        inputs.minBrightness = (abs(minBrightness - _prevInputs.minBrightness) > 0.05) ? minBrightness : _prevInputs.minBrightness;
 
         _prevInputs = inputs;
         return inputs;

@@ -40,8 +40,8 @@ struct inputs_t
     bool wifiSetup;
 
     float ldr;
-    float brightness;
-    float contrast;
+    float maxBrightness;
+    float minBrightness;
 };
 
 #endif

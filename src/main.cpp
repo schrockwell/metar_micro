@@ -129,39 +129,42 @@ namespace Main
       }
     }
 
-    if (_inputs.windVisible != prevInputs.windVisible)
+    if (Debug::PRINT_INPUTS)
     {
-      Serial.println("Wind visibility: " + String(_inputs.windVisible));
-    }
+      if (_inputs.windVisible != prevInputs.windVisible)
+      {
+        Serial.println("Wind visibility: " + String(_inputs.windVisible));
+      }
 
-    if (_inputs.lightningVisible != prevInputs.lightningVisible)
-    {
-      Serial.println("Lightning visibility: " + String(_inputs.lightningVisible));
-    }
+      if (_inputs.lightningVisible != prevInputs.lightningVisible)
+      {
+        Serial.println("Lightning visibility: " + String(_inputs.lightningVisible));
+      }
 
-    if (_inputs.autoDimming != prevInputs.autoDimming)
-    {
-      Serial.println("Auto dimming: " + String(_inputs.autoDimming));
-    }
+      if (_inputs.autoDimming != prevInputs.autoDimming)
+      {
+        Serial.println("Auto dimming: " + String(_inputs.autoDimming));
+      }
 
-    if (_inputs.wifiSetup != prevInputs.wifiSetup)
-    {
-      Serial.println("WiFi setup: " + String(_inputs.wifiSetup));
-    }
+      if (_inputs.wifiSetup != prevInputs.wifiSetup)
+      {
+        Serial.println("WiFi setup: " + String(_inputs.wifiSetup));
+      }
 
-    if (_inputs.ldr != prevInputs.ldr)
-    {
-      Serial.println("LDR: " + String(_inputs.ldr));
-    }
+      if (_inputs.ldr != prevInputs.ldr)
+      {
+        Serial.println("LDR: " + String(_inputs.ldr));
+      }
 
-    if (_inputs.brightness != prevInputs.brightness)
-    {
-      Serial.println("Brightness: " + String(_inputs.brightness));
-    }
+      if (_inputs.maxBrightness != prevInputs.maxBrightness)
+      {
+        Serial.println("Max brightness: " + String(_inputs.maxBrightness));
+      }
 
-    if (_inputs.contrast != prevInputs.contrast)
-    {
-      Serial.println("Contrast: " + String(_inputs.contrast));
+      if (_inputs.minBrightness != prevInputs.minBrightness)
+      {
+        Serial.println("Min brightness: " + String(_inputs.minBrightness));
+      }
     }
   }
 
@@ -207,16 +210,22 @@ namespace Main
 
   uint8_t getDesiredBrightness()
   {
-    float userBrightness = _inputs.brightness;
-    float roomDimness = 0.0;
+    float userBrightness = _inputs.maxBrightness;
+    float dimming = 0.0;
 
     if (_inputs.autoDimming)
     {
-      userBrightness = _inputs.brightness * 1.2; // Give the user 20% extra brightness headroom
-      roomDimness = (1.0 - _inputs.ldr) * _inputs.contrast;
+      // LDR:
+      //   LDR high (1.0) -> room is bright -> less LED dimming -> bright LEDs
+      //   LDR low (0.0) -> room is dark -> more LED dimming -> dim LEDs
+      //
+      // Min brightness knob:
+      //   Min brightness high (1.0) -> less LED dimming -> bright LEDs
+      //   Min brightness low (0.0) -> more LED dimming -> dim LEDs
+      dimming = (1.0 - _inputs.ldr) * (1.0 - _inputs.minBrightness);
     }
 
-    return clamp((userBrightness - roomDimness) * (float)Features::MAX_BRIGHTNESS, Features::MIN_BRIGHTNESS, Features::MAX_BRIGHTNESS);
+    return clamp((userBrightness - dimming) * (float)Features::MASTER_MAX_BRIGHTNESS, Features::MASTER_MIN_BRIGHTNESS, Features::MASTER_MAX_BRIGHTNESS);
   }
 
   void loopRedraw()
@@ -229,14 +238,13 @@ namespace Main
     // - METARs changed (force redraw)
     // - status changed
     // - LDR changed
-    // - brightness changed
-    // - contrast changed
+    // - brightness knobs changed
     // - dimming setting changed
     bool redrawAll = _forceRedraw ||
                      prevStatus != _status ||
                      prevInputs.ldr != _inputs.ldr ||
-                     prevInputs.brightness != _inputs.brightness ||
-                     prevInputs.contrast != _inputs.contrast ||
+                     prevInputs.maxBrightness != _inputs.maxBrightness ||
+                     prevInputs.minBrightness != _inputs.minBrightness ||
                      prevInputs.autoDimming != _inputs.autoDimming;
 
     if (redrawAll)

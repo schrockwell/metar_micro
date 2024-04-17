@@ -4,9 +4,15 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
 
+namespace Version
+{
+    static const char *FIRMWARE = "0.0.1";
+}
+
 namespace Debug
 {
     static const bool PRINT_METARS = true;
+    static const bool PRINT_INPUTS = true;
 }
 
 namespace Colors

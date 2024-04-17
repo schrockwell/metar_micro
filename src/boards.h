@@ -11,8 +11,8 @@ namespace Pins
 {
     static const uint STATUS_LED = 0;
     static const uint NEOPIXEL = 16;
-    static const uint BRIGHTNESS_POT = A1;
-    static const uint CONTRAST_POT = A0;
+    static const uint MAX_BRIGHTNESS_POT = A1;
+    static const uint MIN_BRIGHTNESS_POT = A0;
     static const uint LDR = A2;
 
     static const uint DIP_WIND = 5;
@@ -24,17 +24,17 @@ namespace Pins
 namespace Features
 {
     // Analog inputs
-    static const bool BRIGHTNESS_POT = true;
-    static const bool CONTRAST_POT = true;
+    static const bool MAX_BRIGHTNESS_POT = true;
+    static const bool MIN_BRIGHTNESS_POT = true;
     static const bool LDR = true;
 
-    static const float DEFAULT_BRIGHTNESS = 1.0;
-    static const float DEFAULT_CONTRAST = 1.0;
+    static const float DEFAULT_MAX_BRIGHTNESS = 1.0;
+    static const float DEFAULT_MIN_BRIGHTNESS = 1.0;
     static const float DEFAULT_LDR = 1.0;
 
     // LEDs
-    static const uint8_t MIN_BRIGHTNESS = 10;  // 0-255
-    static const uint8_t MAX_BRIGHTNESS = 255; // 0-255
+    static const uint8_t MASTER_MIN_BRIGHTNESS = 10;  // 0-255
+    static const uint8_t MASTER_MAX_BRIGHTNESS = 255; // 0-255
 
     // Switches
     static const bool FORCE_WINDS = false;
@@ -68,8 +68,8 @@ namespace Pins
 {
     static const uint STATUS_LED = 0;
     static const uint NEOPIXEL = 16;
-    static const uint BRIGHTNESS_POT = A1;
-    static const uint CONTRAST_POT = A0;
+    static const uint MAX_BRIGHTNESS_POT = A1;
+    static const uint MIN_BRIGHTNESS_POT = A0;
     static const uint LDR = A2;
 
     static const uint DIP_WIND = 8;
@@ -81,16 +81,13 @@ namespace Pins
 namespace Features
 {
     // Analog inputs
-    static const bool BRIGHTNESS_POT = true;
-    static const bool CONTRAST_POT = true;
+    static const bool MAX_BRIGHTNESS_POT = true;
+    static const bool MIN_BRIGHTNESS_POT = true;
     static const bool LDR = true;
 
-    static const float DEFAULT_BRIGHTNESS = 1.0;
-    static const float DEFAULT_CONTRAST = 1.0;
+    static const float DEFAULT_MAX_BRIGHTNESS = 1.0;
+    static const float DEFAULT_MIN_BRIGHTNESS = 1.0;
     static const float DEFAULT_LDR = 1.0;
-
-    // LEDs
-    static const uint8_t MIN_BRIGHTNESS = 2; // 0-255
 
     // LED current draw (~12 mA per LED at full brightness):
     //   255 -> 710 mA
@@ -98,7 +95,8 @@ namespace Features
     //   64  -> 160 mA
     //   32  -> 60 mA
     // (+100 mA for Pico)
-    static const uint8_t MAX_BRIGHTNESS = 32; // 0-255
+    static const uint8_t MASTER_MIN_BRIGHTNESS = 2;  // 0-255
+    static const uint8_t MASTER_MAX_BRIGHTNESS = 64; // 0-255
 
     // Switches
     static const bool FORCE_WINDS = false;
