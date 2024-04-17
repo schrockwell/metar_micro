@@ -76,6 +76,7 @@ namespace METARS
     newMetar.raw = metarString;
     newMetar.visibility = -1;
     newMetar.ceiling = 10000; // Default to high value if not found
+    newMetar.lightning = false;
 
     for (int i = 0; i < wordCount; i++)
     {
