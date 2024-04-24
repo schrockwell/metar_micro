@@ -84,7 +84,7 @@ namespace Main
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      if (FAA::fetchMETARs(_metars, _metarCount))
+      if (FAA::fetchMETARs(data_source_t::API_SOURCE, _metars, _metarCount))
       {
         printMetars();
         setStatus(CONNECTED_WITH_DATA);

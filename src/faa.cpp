@@ -2,17 +2,30 @@
 
 #include "faa.h"
 #include "metars.h"
+#include "secrets.h"
 
 namespace FAA
 {
-  const char *BASE_URL = "https://aviationweather.gov/api/data/metar?format=raw&ids=";
+  const char *FAA_BASE_URL = "https://aviationweather.gov/api/data/metar?format=raw&ids=";
+  const char *API_BASE_URL = "https://tropo.airmap.shop";
 
-  bool fetchMETARs(metar_t *metars, const int metarCount)
+  bool fetchMETARs(data_source_t source, metar_t *metars, const int metarCount)
   {
     HTTPClient http;
-    http.setInsecure(); // Allow https
+    String fullURL;
 
-    String fullURL = buildURL(BASE_URL, metars, metarCount);
+    switch (source)
+    {
+    case data_source_t::FAA_SOURCE:
+      http.setInsecure(); // Allow https
+      fullURL = buildFAAURL(metars, metarCount);
+      break;
+    case data_source_t::API_SOURCE:
+      http.setInsecure(); // Allow https
+      fullURL = buildAPIURL();
+      break;
+    }
+
     Serial.println(fullURL);
     http.begin(fullURL);
     int httpCode = http.GET();
@@ -43,9 +56,9 @@ namespace FAA
     return ok;
   }
 
-  String buildURL(const String baseURL, const metar_t *metars, const int metarCount)
+  String buildFAAURL(const metar_t *metars, const int metarCount)
   {
-    String url = baseURL;
+    String url = FAA_BASE_URL;
     for (int i = 0; i < metarCount; i++)
     {
       url += metars[i].airportID;
@@ -54,6 +67,18 @@ namespace FAA
         url += ","; // Add a comma after each ID except the last one
       }
     }
+    return url;
+  }
+
+  String buildAPIURL()
+  {
+    String url = API_BASE_URL;
+    // Convert serial to 12 digit hex string
+    char serialStr[13];
+    snprintf(serialStr, sizeof(serialStr), "%012llx", Secrets::getSerial());
+
+    url += "/api/devices/" + String(serialStr) + "/metars";
+
     return url;
   }
 }

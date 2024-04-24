@@ -7,8 +7,9 @@
 
 namespace FAA
 {
-    bool fetchMETARs(metar_t *metars, const int metarCount);
-    String buildURL(const String baseURL, const metar_t *metars, const int metarCount);
+    bool fetchMETARs(data_source_t source, metar_t *metars, const int metarCount);
+    String buildFAAURL(const metar_t *metars, const int metarCount);
+    String buildAPIURL();
 }
 
 #endif

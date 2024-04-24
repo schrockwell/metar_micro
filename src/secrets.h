@@ -22,6 +22,8 @@ namespace Secrets
     void writeToEEPROM(int startAddr, const String &data);
     String readFromEEPROM(int startAddr);
 
+    uint64_t getSerial();
+
 }
 
 #endif // SECRETS_H

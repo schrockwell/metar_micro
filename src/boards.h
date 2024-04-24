@@ -41,6 +41,8 @@ namespace Features
     static const bool FORCE_LIGHTNING = false;
     static const bool FORCE_DIMMING = false;
     static const bool FORCE_WIFI_SETUP = false;
+
+    static const uint64_t HARDCODED_SERIAL = 0x000000000001;
 }
 
 namespace Airports
@@ -60,7 +62,7 @@ namespace Airports
 
 #endif // AIRMAP_BOARD_PROTO
 
-#ifdef AIRMAP_BOARD_DEV1
+#ifdef PCB_AM_M0406CT_0
 
 #define NEOPIXEL_ORDERING NeoGrbFeature
 
@@ -103,6 +105,8 @@ namespace Features
     static const bool FORCE_LIGHTNING = false;
     static const bool FORCE_DIMMING = false;
     static const bool FORCE_WIFI_SETUP = false;
+
+    static const uint64_t HARDCODED_SERIAL = 0x000000000002;
 }
 
 namespace Airports
@@ -187,6 +191,6 @@ namespace Airports
     static const int COUNT = sizeof(IDs) / sizeof(IDs[0]);
 }
 
-#endif // AIRMAP_BOARD_DEV1
+#endif // PCB_AM_M0406CT_0
 
 #endif // BOARDS_H

@@ -1,4 +1,5 @@
 #include "secrets.h"
+#include "boards.h"
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -72,5 +73,17 @@ namespace Secrets
             result += ch;
         }
         return result;
+    }
+
+    uint64_t getSerial()
+    {
+        if (Features::HARDCODED_SERIAL != 0)
+        {
+            return Features::HARDCODED_SERIAL;
+        }
+
+        // TODO: implement serial number reader from IC
+
+        return 0;
     }
 }
