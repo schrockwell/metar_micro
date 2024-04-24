@@ -77,13 +77,22 @@ namespace Secrets
 
     uint64_t getSerial()
     {
-        if (Features::HARDCODED_SERIAL != 0)
-        {
-            return Features::HARDCODED_SERIAL;
-        }
+        return getSerialFromPico();
+    }
 
-        // TODO: implement serial number reader from IC
+    String getSerialString()
+    {
+        // convert serial to 0000-0000-0000 format
+        uint64_t serial = getSerial();
+        char serialStr[16];
+        snprintf(serialStr, sizeof(serialStr), "%04X-%04X-%04X", (uint16_t)(serial >> 32), (uint16_t)(serial >> 16), (uint16_t)serial);
+        return String(serialStr);
+    }
 
-        return 0;
+    uint64_t getSerialFromPico()
+    {
+        pico_unique_board_id_t id;
+        pico_get_unique_board_id(&id);
+        return *(uint64_t *)id.id & 0x0000FFFFFFFFFFFF;
     }
 }

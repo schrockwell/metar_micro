@@ -41,8 +41,6 @@ namespace Features
     static const bool FORCE_LIGHTNING = false;
     static const bool FORCE_DIMMING = false;
     static const bool FORCE_WIFI_SETUP = false;
-
-    static const uint64_t HARDCODED_SERIAL = 0x000000000001;
 }
 
 namespace Airports
@@ -105,8 +103,6 @@ namespace Features
     static const bool FORCE_LIGHTNING = false;
     static const bool FORCE_DIMMING = false;
     static const bool FORCE_WIFI_SETUP = false;
-
-    static const uint64_t HARDCODED_SERIAL = 0x000000000002;
 }
 
 namespace Airports

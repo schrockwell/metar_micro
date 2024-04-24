@@ -72,13 +72,6 @@ namespace FAA
 
   String buildAPIURL()
   {
-    String url = API_BASE_URL;
-    // Convert serial to 12 digit hex string
-    char serialStr[13];
-    snprintf(serialStr, sizeof(serialStr), "%012llx", Secrets::getSerial());
-
-    url += "/api/devices/" + String(serialStr) + "/metars";
-
-    return url;
+    return String(API_BASE_URL) + "/api/devices/" + Secrets::getSerialString() + "/metars";
   }
 }

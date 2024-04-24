@@ -23,6 +23,8 @@ namespace Secrets
     String readFromEEPROM(int startAddr);
 
     uint64_t getSerial();
+    uint64_t getSerialFromPico();
+    String getSerialString();
 
 }
 

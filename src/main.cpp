@@ -30,6 +30,8 @@ void setup()
 
   Main::loopInputs();
   Main::loopRedraw();
+
+  Serial.println("Serial number: " + Secrets::getSerialString());
 }
 
 void loop()
