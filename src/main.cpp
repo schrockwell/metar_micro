@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
 #include <WiFi.h>
+#include <LEAmDNS.h>
 
 #include "airports.h"
 #include "boards.h"
@@ -17,6 +18,10 @@ void setup()
 {
   Serial.begin(115200);
 
+  MDNS.begin("airmap");
+  MDNS.addService("http", "tcp", 80);
+  MDNS.announce();
+
   Secrets::setup();
   WifiSetup::setup();
   Main::setupMETARs();
@@ -29,6 +34,8 @@ void setup()
 
 void loop()
 {
+  MDNS.update();
+
   Main::loopInputs();
   Main::loopMETARFetch();
   Main::loopRedraw();
