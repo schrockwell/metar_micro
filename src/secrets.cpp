@@ -8,7 +8,7 @@ namespace Secrets
 {
     void setup()
     {
-        EEPROM.begin(512);
+        EEPROM.begin(1024);
 
         if (checkSignature())
         {
@@ -27,8 +27,8 @@ namespace Secrets
         Serial.println("Initializing EEPROM");
 
         settings_t defaultSettings = {
-            .ssid = "",
-            .password = "",
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASSWORD,
             .lightning = true,
             .wind = true,
             .windy_kts = 15,
