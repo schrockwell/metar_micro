@@ -211,7 +211,7 @@ namespace Main
 
   uint8_t getDesiredBrightness()
   {
-    float userBrightness = _settings.brightness / 100.0;
+    float userBrightness = (float)_settings.brightness / 100.0;
     float dimming = 0.0;
 
     if (false) // auto-dimming
@@ -234,7 +234,9 @@ namespace Main
   {
     static inputs_t prevInputs = _inputs;
     static status_t prevStatus = _status;
-    static unsigned long lastAnimateAt = 0;
+    static unsigned long nextAnimateAt = 0;
+    static unsigned long nextStatusFlashAt = 0;
+    static bool statusFlash = false;
 
     // Redraw all if:
     // - METARs changed (force redraw)
@@ -252,10 +254,15 @@ namespace Main
       {
         drawMETARs();
       }
-      else
-      {
-        drawStatus();
-      }
+    }
+
+    // Flash status LED when we're in a nonfunctional state
+    if (_status != DISCONNECTED && _status != CONNECTED_WITH_DATA && millis() > nextStatusFlashAt)
+    {
+      // Don't flash when trying to reconnect
+      drawStatus(statusFlash);
+      nextStatusFlashAt = millis() + 1000;
+      statusFlash = !statusFlash;
     }
 
     // Animate:
@@ -263,10 +270,10 @@ namespace Main
     // - windy stations
     if (_status == CONNECTED_WITH_DATA)
     {
-      if (millis() - lastAnimateAt > Config::ANIMATION_FRAME_DURATION)
+      if (millis() > nextAnimateAt)
       {
         drawAnimationFrame();
-        lastAnimateAt = millis();
+        nextAnimateAt = millis() + Config::ANIMATION_FRAME_DURATION;
       }
     }
 
@@ -303,7 +310,8 @@ namespace Main
         }
         else
         {
-          setStationPixel(metar.ledIndex, getCategoryColor(metar.category));
+          RgbColor color = getCategoryColor(metar.category);
+          setStationPixel(metar.ledIndex, color);
         }
       }
     }
@@ -331,9 +339,15 @@ namespace Main
     }
   }
 
-  void drawStatus()
+  void drawStatus(bool flash)
   {
     clearStrip();
+
+    if (flash)
+    {
+      setStationPixel(Pins::STATUS_LED, Colors::BLACK);
+      return;
+    }
 
     switch (_status)
     {

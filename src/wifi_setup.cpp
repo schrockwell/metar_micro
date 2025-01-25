@@ -10,6 +10,7 @@ namespace WifiSetup
 
     void setup()
     {
+        // TOOD: Add endpoint to POST settings and preview when changed
         _server.on("/", HTTP_GET, handleForm);
         _server.on("/", HTTP_POST, handlePost);
     }

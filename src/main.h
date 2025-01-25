@@ -24,7 +24,7 @@ namespace Main
     // Drawing loop
     void drawMETARs();
     void drawAnimationFrame();
-    void drawStatus();
+    void drawStatus(bool flash);
 
     // LEDs
     uint8_t getDesiredBrightness();

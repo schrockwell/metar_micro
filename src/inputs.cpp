@@ -52,8 +52,6 @@ namespace Inputs
         inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
 
         float ldr = Features::LDR ? analogRead(Pins::LDR) / 1024.0 : Features::DEFAULT_LDR;
-        float maxBrightness = Features::MAX_BRIGHTNESS_POT ? analogRead(Pins::MAX_BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_MAX_BRIGHTNESS;
-        float minBrightness = Features::MIN_BRIGHTNESS_POT ? analogRead(Pins::MIN_BRIGHTNESS_POT) / 1024.0 : Features::DEFAULT_MIN_BRIGHTNESS;
 
         // LDR: 5% change threshold
         inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.05) ? ldr : _prevInputs.ldr;
