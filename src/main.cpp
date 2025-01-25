@@ -125,19 +125,16 @@ namespace Main
     inputs_t prevInputs = system.inputs;
     system.inputs = Inputs::read();
 
-    if (system.inputs.wifiSetup != prevInputs.wifiSetup)
+    // Long-press on setup button => toggle setup mode
+    if (system.inputs.wifiSetup && system.inputs.wifiSetup != prevInputs.wifiSetup)
     {
-      if (system.inputs.wifiSetup)
+      if (system.status == WIFI_SETUP)
       {
-        setStatus(WIFI_SETUP);
-        WifiSetup::begin();
+        endSetup();
       }
       else
       {
-        WifiSetup::end();
-        system.settings = Secrets::readSettings();
-        setStatus(INITIALIZING);
-        _retryFetchAfter = 0;
+        beginSetup();
       }
     }
 
@@ -153,6 +150,21 @@ namespace Main
         Serial.println("LDR: " + String(system.inputs.ldr));
       }
     }
+  }
+
+  void beginSetup()
+  {
+    setStatus(WIFI_SETUP);
+    WifiSetup::begin();
+  }
+
+  void endSetup()
+  {
+    WifiSetup::end();
+    system.settings = Secrets::readSettings();
+    LEDs::clearStrip();
+    setStatus(INITIALIZING);
+    _retryFetchAfter = 0;
   }
 
   void loopWifiSetup()

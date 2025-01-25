@@ -92,7 +92,7 @@ namespace WifiSetup
 )rawliteral";
 
     static const char SUCCESS_HTML[] PROGMEM = R"rawliteral(
-<p class="notice">Settings saved. You can switch back to normal mode now.</p>
+<p class="notice">Settings saved. The map will now connect to the internet. To make further changes, long-press the setup button.</p>
 )rawliteral";
 
     static const char ERROR_HTML[] PROGMEM = R"rawliteral(

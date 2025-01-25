@@ -12,7 +12,6 @@ namespace WifiSetup
 
     void setup()
     {
-        // TOOD: Add endpoint to POST settings and preview when changed
         _server.on("/", HTTP_GET, handleForm);
         _server.on("/", HTTP_POST, handlePost);
         _server.on("/brightness", HTTP_GET, handleBrightness);
@@ -101,6 +100,7 @@ namespace WifiSetup
             Secrets::writeSettings(settings);
 
             _server.send(200, "text/html", String(HEADER_HTML) + String(SUCCESS_HTML) + String(FOOTER_HTML));
+            Main::endSetup();
         }
         else
         {

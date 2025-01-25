@@ -33,21 +33,12 @@ namespace Inputs
 
     inputs_t read()
     {
-        static bool windVisible;
-        static bool lightningVisible;
-        static bool autoDimming;
         static bool wifiSetup;
-        static unsigned long windVisibilePrevMillis = 0;
-        static unsigned long lightningVisiblePrevMillis = 0;
-        static unsigned long autoDimmingPrevMillis = 0;
         static unsigned long wifiSetupPrevMillis = 0;
 
         inputs_t inputs;
 
-        debounce(!digitalRead(Pins::DIP_WIND), windVisible, windVisibilePrevMillis);
-        debounce(!digitalRead(Pins::DIP_LIGHTNING), lightningVisible, lightningVisiblePrevMillis);
-        debounce(!digitalRead(Pins::DIP_DIMMING), autoDimming, autoDimmingPrevMillis);
-        debounce(!digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
+        debounce(LONG_PRESS_DELAY, !digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
 
         inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
 
@@ -60,15 +51,15 @@ namespace Inputs
         return inputs;
     }
 
-    void debounce(bool value, bool &prevValue, unsigned long &prevMillis)
+    void debounce(int delay, bool value, bool &prevValue, unsigned long &prevMillis)
     {
         if (value != prevValue)
         {
-            if (millis() - prevMillis > DEBOUNCE_DELAY)
+            if (millis() - prevMillis > delay)
             {
                 prevValue = value;
-                prevMillis = millis();
             }
+            prevMillis = millis();
         }
     }
 }

@@ -16,6 +16,7 @@ namespace LEDs
     void setupStrip()
     {
         _strip.Begin();
+        clearStrip();
     }
 
     void loopRedraw()
@@ -54,7 +55,7 @@ namespace LEDs
         if (Main::system.status != CONNECTED_WITH_DATA && millis() > nextStatusFlashAt)
         {
             // Don't flash when trying to reconnect
-            drawStatus(statusFlash);
+            drawStatus(statusFlash && Main::system.status != DISCONNECTED);
             nextStatusFlashAt = millis() + 1000;
             statusFlash = !statusFlash;
         }

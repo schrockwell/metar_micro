@@ -28,6 +28,10 @@ namespace Main
 
     // State management
     void setStatus(status_t status);
+
+    // Setup
+    void beginSetup();
+    void endSetup();
 }
 
 #endif
