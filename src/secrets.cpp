@@ -1,5 +1,5 @@
 #include "secrets.h"
-#include "boards.h"
+#include "board.h"
 
 #include <Arduino.h>
 #include <EEPROM.h>

@@ -4,7 +4,7 @@
 #include <LEAmDNS.h>
 
 #include "airports.h"
-#include "boards.h"
+#include "board.h"
 #include "constants.h"
 #include "inputs.h"
 #include "faa.h"

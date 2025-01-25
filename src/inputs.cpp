@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "constants.h"
-#include "boards.h"
+#include "board.h"
 #include "inputs.h"
 
 namespace Inputs
