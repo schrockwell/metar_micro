@@ -49,9 +49,6 @@ namespace Inputs
         debounce(!digitalRead(Pins::DIP_DIMMING), autoDimming, autoDimmingPrevMillis);
         debounce(!digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
 
-        inputs.windVisible = windVisible || Features::FORCE_WINDS;
-        inputs.lightningVisible = lightningVisible || Features::FORCE_LIGHTNING;
-        inputs.autoDimming = autoDimming || Features::FORCE_DIMMING;
         inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
 
         float ldr = Features::LDR ? analogRead(Pins::LDR) / 1024.0 : Features::DEFAULT_LDR;
@@ -60,10 +57,6 @@ namespace Inputs
 
         // LDR: 5% change threshold
         inputs.ldr = (abs(ldr - _prevInputs.ldr) > 0.05) ? ldr : _prevInputs.ldr;
-
-        // Brightness pots: 5% change threshold
-        inputs.maxBrightness = (abs(maxBrightness - _prevInputs.maxBrightness) > 0.05) ? maxBrightness : _prevInputs.maxBrightness;
-        inputs.minBrightness = (abs(minBrightness - _prevInputs.minBrightness) > 0.05) ? minBrightness : _prevInputs.minBrightness;
 
         _prevInputs = inputs;
         return inputs;

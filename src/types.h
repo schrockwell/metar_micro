@@ -42,14 +42,9 @@ struct metar_t
 
 struct inputs_t
 {
-    bool windVisible;
-    bool lightningVisible;
-    bool autoDimming;
     bool wifiSetup;
 
     float ldr;
-    float maxBrightness;
-    float minBrightness;
 };
 
 #endif

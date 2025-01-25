@@ -52,7 +52,7 @@ namespace Config
     // Timing
     static const uint METAR_FETCH_INTERVAL = 300000; // 5 minutes (after successful fetch)
     static const uint METAR_RETRY_INTERVAL = 60000;  // 1 minute (after failed fetch)
-    static const uint WIFI_RETRY_INTERVAL = 0;       // immediately (after failed connect)
+    static const uint WIFI_RETRY_INTERVAL = 60000;   // 1 minute (after no wifi config)
 }
 
 #endif

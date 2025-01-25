@@ -16,17 +16,18 @@
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
+
+  Secrets::setup();
+  WifiSetup::setup();
+  Main::setupSettings();
+  Main::setupMETARs();
+  Main::setupStrip();
+  Inputs::setup();
 
   MDNS.begin("airmap");
   MDNS.addService("http", "tcp", 80);
   MDNS.announce();
-
-  Secrets::setup();
-  WifiSetup::setup();
-  Main::setupMETARs();
-  Main::setupStrip();
-  Inputs::setup();
 
   Main::loopInputs();
   Main::loopRedraw();
@@ -51,9 +52,15 @@ namespace Main
   status_t _status = INITIALIZING;
   metar_t _metars[Airports::COUNT];
   inputs_t _inputs;
+  Secrets::settings_t _settings;
   bool _forceRedraw = true;
   int _metarCount;
   unsigned long _retryFetchAfter = 0;
+
+  void setupSettings()
+  {
+    _settings = Secrets::readSettings();
+  }
 
   void setupMETARs()
   {
@@ -93,7 +100,7 @@ namespace Main
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      if (FAA::fetchMETARs(data_source_t::API_SOURCE, _metars, _metarCount))
+      if (FAA::fetchMETARs(data_source_t::FAA_SOURCE, _metars, _metarCount))
       {
         printMetars();
         setStatus(CONNECTED_WITH_DATA);
@@ -109,12 +116,21 @@ namespace Main
     else
     {
       Serial.println("Reconnecting to WiFi...");
+
       setStatus(DISCONNECTED);
-      String ssid;
-      String password;
-      Secrets::readWiFiCredentials(ssid, password);
-      WiFi.begin(ssid.c_str(), password.c_str());
-      _retryFetchAfter = millis() + Config::WIFI_RETRY_INTERVAL;
+      Secrets::settings_t settings = Secrets::readSettings();
+      if (strcmp(settings.ssid, "") == 0)
+      {
+        Serial.println("No WiFi settings found");
+        _retryFetchAfter = millis() + Config::WIFI_RETRY_INTERVAL;
+      }
+      else
+      {
+        Serial.println("SSID: " + String(settings.ssid));
+        Serial.println("Password: " + String(settings.password));
+        WiFi.begin(settings.ssid, settings.password);
+        _retryFetchAfter = millis(); // Retry immediately
+      }
     }
   }
 
@@ -133,6 +149,7 @@ namespace Main
       else
       {
         WifiSetup::end();
+        _settings = Secrets::readSettings();
         setStatus(INITIALIZING);
         _retryFetchAfter = 0;
       }
@@ -140,21 +157,6 @@ namespace Main
 
     if (Debug::PRINT_INPUTS)
     {
-      if (_inputs.windVisible != prevInputs.windVisible)
-      {
-        Serial.println("Wind visibility: " + String(_inputs.windVisible));
-      }
-
-      if (_inputs.lightningVisible != prevInputs.lightningVisible)
-      {
-        Serial.println("Lightning visibility: " + String(_inputs.lightningVisible));
-      }
-
-      if (_inputs.autoDimming != prevInputs.autoDimming)
-      {
-        Serial.println("Auto dimming: " + String(_inputs.autoDimming));
-      }
-
       if (_inputs.wifiSetup != prevInputs.wifiSetup)
       {
         Serial.println("WiFi setup: " + String(_inputs.wifiSetup));
@@ -163,16 +165,6 @@ namespace Main
       if (_inputs.ldr != prevInputs.ldr)
       {
         Serial.println("LDR: " + String(_inputs.ldr));
-      }
-
-      if (_inputs.maxBrightness != prevInputs.maxBrightness)
-      {
-        Serial.println("Max brightness: " + String(_inputs.maxBrightness));
-      }
-
-      if (_inputs.minBrightness != prevInputs.minBrightness)
-      {
-        Serial.println("Min brightness: " + String(_inputs.minBrightness));
       }
     }
   }
@@ -219,11 +211,12 @@ namespace Main
 
   uint8_t getDesiredBrightness()
   {
-    float userBrightness = _inputs.maxBrightness;
+    float userBrightness = _settings.brightness / 100.0;
     float dimming = 0.0;
 
-    if (_inputs.autoDimming)
+    if (false) // auto-dimming
     {
+      float minBrightness = 0.05;
       // LDR:
       //   LDR high (1.0) -> room is bright -> less LED dimming -> bright LEDs
       //   LDR low (0.0) -> room is dark -> more LED dimming -> dim LEDs
@@ -231,7 +224,7 @@ namespace Main
       // Min brightness knob:
       //   Min brightness high (1.0) -> less LED dimming -> bright LEDs
       //   Min brightness low (0.0) -> more LED dimming -> dim LEDs
-      dimming = (1.0 - _inputs.ldr) * (1.0 - _inputs.minBrightness);
+      dimming = (1.0 - _inputs.ldr) * (1.0 - minBrightness);
     }
 
     return clamp((userBrightness - dimming) * (float)Features::MASTER_MAX_BRIGHTNESS, Features::MASTER_MIN_BRIGHTNESS, Features::MASTER_MAX_BRIGHTNESS);
@@ -251,10 +244,7 @@ namespace Main
     // - dimming setting changed
     bool redrawAll = _forceRedraw ||
                      prevStatus != _status ||
-                     prevInputs.ldr != _inputs.ldr ||
-                     prevInputs.maxBrightness != _inputs.maxBrightness ||
-                     prevInputs.minBrightness != _inputs.minBrightness ||
-                     prevInputs.autoDimming != _inputs.autoDimming;
+                     prevInputs.ldr != _inputs.ldr;
 
     if (redrawAll)
     {
@@ -303,12 +293,7 @@ namespace Main
     for (int i = 0; i < _metarCount; i++)
     {
       metar_t metar = _metars[i];
-      if (max(metar.wind, metar.windGust) < Config::GUSTY_WIND_THRESHOLD)
-      {
-        continue;
-      }
-
-      if (_inputs.windVisible)
+      if (_settings.windy_kts > 0 && max(metar.wind, metar.windGust) > _settings.windy_kts)
       {
         bool flicker = random(100) < Config::FLICKER_WIND_PERCENT;
         if (flicker)
@@ -323,7 +308,7 @@ namespace Main
       }
     }
 
-    if (_inputs.lightningVisible)
+    if (_settings.lightning)
     {
       for (int i = 0; i < _metarCount; i++)
       {

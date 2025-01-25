@@ -11,6 +11,7 @@ void loop();
 namespace Main
 {
     // Setup
+    void setupSettings();
     void setupMETARs();
     void setupStrip();
 

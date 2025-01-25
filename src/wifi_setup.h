@@ -21,11 +21,15 @@ namespace WifiSetup
 <html>
 <head>
     <title>Wi-Fi Setup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial; background-color: #e2e8f0; }
-        fieldset { border: 0; padding: 0; margin: 1em 0; }
-        label { display: block; margin-bottom: 0.5em; }
-        input[type=text], input[type=password] { padding: 0.5em; }
+        fieldset { border: 0; padding: 0; margin: 2em 0; max-width: 20em; }
+        fieldset.h { display: flex; align-items: center; gap: 0.5em; }
+        fieldset.v { display: flex; flex-direction: column; gap: 0.5em; }
+        input { max-width: 20em; }
+        input[type=text], input[type=password] { padding: 0.5em 1em; font-size: 1.25em; }
+        input[type=submit] { padding: 0.5em 1em; font-size: 1.25em; background-color: #2563eb; color: white; border: 0; cursor: pointer; }
         a { color: #2563eb; }
     </style>
 </head>
@@ -40,14 +44,29 @@ namespace WifiSetup
     static const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <h2>METAR Map Wi-Fi Setup</h2>
 <form method="post">
-    <fieldset>
+    <fieldset class="v">
         <label for="ssid">SSID</label>
-        <input type="text" name="ssid">
+        <input type="text" id="ssid" name="ssid" value="{{ssid}}">
     </fieldset>
 
-    <fieldset>
+    <fieldset class="v">
         <label for="password">Password</label>
-        <input type="password" name="password">
+        <input type="text" id="password" name="password" value="{{password}}">
+    </fieldset>
+
+    <fieldset class="h">
+        <input type="checkbox" id="lightning" name="lightning" value="1" {{lightning}}>
+        <label for="lightning">Show lightning</label>
+    </fieldset>
+
+    <fieldset class="v">
+        <label for="windy_kts">Show windy stations above kts</label>
+        <input type="text" id="windy_kts" name="windy_kts" value="{{windy_kts}}">
+    </fieldset>
+
+    <fieldset class="v">
+        <label for="brightness">Brightness</label>
+        <input type="range" min="5" max="100" id="brightness" name="brightness" value="{{brightness}}">
     </fieldset>
     
     <input type="submit" value="Save">

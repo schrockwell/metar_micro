@@ -10,23 +10,43 @@ namespace Secrets
     {
         EEPROM.begin(512);
 
-        if (!checkSignature())
+        if (checkSignature())
         {
-            writeWiFiCredentials("ssid", "password");
-            writeSignature();
+            Serial.println("EEPROM signature found");
+        }
+        else
+        {
+            Serial.println("No EEPROM signature found");
+            initializeEEPROM();
         }
     }
 
-    void writeWiFiCredentials(String ssid, String password)
+    void initializeEEPROM()
     {
-        writeToEEPROM(SSID_ADDR, ssid);
-        writeToEEPROM(PASSWORD_ADDR, password);
+        Serial.println("Initializing EEPROM");
+
+        settings_t defaultSettings = {
+            .ssid = "",
+            .password = "",
+            .lightning = true,
+            .windy_kts = 15,
+            .brightness = 50,
+        };
+
+        writeSettings(defaultSettings);
+        writeSignature();
     }
 
-    void readWiFiCredentials(String &ssid, String &password)
+    void writeSettings(settings_t settings)
     {
-        ssid = readFromEEPROM(SSID_ADDR);
-        password = readFromEEPROM(PASSWORD_ADDR);
+        EEPROM.put(SETTINGS_ADDR, settings);
+    }
+
+    settings_t readSettings()
+    {
+        settings_t settings;
+        EEPROM.get(SETTINGS_ADDR, settings);
+        return settings;
     }
 
     void writeSignature()
