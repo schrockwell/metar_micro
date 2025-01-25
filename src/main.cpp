@@ -159,10 +159,10 @@ namespace Main
 
   void endSetup()
   {
-    WifiSetup::end();
-    system.settings = Secrets::readSettings();
     LEDs::clearStrip();
     setStatus(INITIALIZING);
+    WifiSetup::end();
+    system.settings = Secrets::readSettings();
     _retryFetchAfter = 0;
   }
 

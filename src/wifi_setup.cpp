@@ -101,6 +101,7 @@ namespace WifiSetup
             Secrets::writeSettings(settings);
 
             _server.send(200, "text/html", String(HEADER_HTML) + String(SUCCESS_HTML) + footerHtml());
+            delay(1000);
             Main::endSetup();
         }
         else

@@ -40,7 +40,7 @@ namespace LEDs
         // Only wipe LEDs on initial status change
         if (statusChanged)
         {
-            clearStrip();
+            clearStrip(false);
         }
 
         if (redrawAll)
@@ -189,11 +189,16 @@ namespace LEDs
         _forceRedraw = true;
     }
 
-    void clearStrip()
+    void clearStrip(bool show)
     {
         for (int i = 0; i < Airports::COUNT; i++)
         {
             _strip.SetPixelColor(i, Colors::BLACK);
+        }
+
+        if (show)
+        {
+            _strip.Show();
         }
     }
 

@@ -21,7 +21,7 @@ namespace LEDs
     RgbColor getCategoryColor(const category_t category);
 
     // Setters
-    void clearStrip();
+    void clearStrip(bool show = true);
     void setStationPixel(int index, RgbColor color);
     void setStatus(status_t status);
     void setStatusPixel(RgbColor color);
