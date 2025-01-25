@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "inputs.h"
 #include "faa.h"
+#include "leds.h"
 #include "main.h"
 #include "metars.h"
 #include "secrets.h"
@@ -22,11 +23,11 @@ void setup()
   WifiSetup::setup();
   Main::setupSettings();
   Main::setupMETARs();
-  Main::setupStrip();
+  LEDs::setupStrip();
   Inputs::setup();
 
   Main::loopInputs();
-  Main::loopRedraw();
+  LEDs::loopRedraw();
 
   Serial.println("Serial number: " + Secrets::getSerialString());
 }
@@ -35,25 +36,15 @@ void loop()
 {
   Main::loopInputs();
   Main::loopMETARFetch();
-  Main::loopRedraw();
+  LEDs::loopRedraw();
   Main::loopWifiSetup();
 }
 
 namespace Main
 {
-  NeoPixelBus<NEOPIXEL_ORDERING, NeoWs2812xMethod> _strip(Airports::COUNT, Pins::NEOPIXEL);
-
-  status_t _status = INITIALIZING;
-  metar_t _metars[Airports::COUNT];
-  inputs_t _inputs;
-  Secrets::settings_t _settings;
-  bool _forceRedraw = true;
-  int _metarCount;
-  unsigned long _retryFetchAfter = 0;
-
   void setupSettings()
   {
-    _settings = Secrets::readSettings();
+    system.settings = Secrets::readSettings();
   }
 
   void setupMETARs()
@@ -66,17 +57,12 @@ namespace Main
         continue;
       }
 
-      _metars[metarIndex].airportID = Airports::IDs[i];
-      _metars[metarIndex].ledIndex = i;
+      system.metars[metarIndex].airportID = Airports::IDs[i];
+      system.metars[metarIndex].ledIndex = i;
       metarIndex++;
     }
 
-    _metarCount = metarIndex;
-  }
-
-  void setupStrip()
-  {
-    _strip.Begin();
+    system.metarCount = metarIndex;
   }
 
   void loopMETARFetch()
@@ -87,14 +73,14 @@ namespace Main
       return;
     }
 
-    if (_status == WIFI_SETUP)
+    if (system.status == WIFI_SETUP)
     {
       return;
     }
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      if (FAA::fetchMETARs(data_source_t::FAA_SOURCE, _metars, _metarCount))
+      if (FAA::fetchMETARs(data_source_t::FAA_SOURCE, system.metars, system.metarCount))
       {
         printMetars();
         setStatus(CONNECTED_WITH_DATA);
@@ -112,7 +98,7 @@ namespace Main
       Serial.println("Reconnecting to WiFi...");
 
       setStatus(DISCONNECTED);
-      Secrets::settings_t settings = Secrets::readSettings();
+      settings_t settings = Secrets::readSettings();
       if (strcmp(settings.ssid, "") == 0)
       {
         Serial.println("No WiFi settings found");
@@ -128,14 +114,20 @@ namespace Main
     }
   }
 
+  void setStatus(status_t status)
+  {
+    system.status = status;
+    LEDs::setStatus(status);
+  }
+
   void loopInputs()
   {
-    inputs_t prevInputs = _inputs;
-    _inputs = Inputs::read();
+    inputs_t prevInputs = system.inputs;
+    system.inputs = Inputs::read();
 
-    if (_inputs.wifiSetup != prevInputs.wifiSetup)
+    if (system.inputs.wifiSetup != prevInputs.wifiSetup)
     {
-      if (_inputs.wifiSetup)
+      if (system.inputs.wifiSetup)
       {
         setStatus(WIFI_SETUP);
         WifiSetup::begin();
@@ -143,7 +135,7 @@ namespace Main
       else
       {
         WifiSetup::end();
-        _settings = Secrets::readSettings();
+        system.settings = Secrets::readSettings();
         setStatus(INITIALIZING);
         _retryFetchAfter = 0;
       }
@@ -151,243 +143,24 @@ namespace Main
 
     if (Debug::PRINT_INPUTS)
     {
-      if (_inputs.wifiSetup != prevInputs.wifiSetup)
+      if (system.inputs.wifiSetup != prevInputs.wifiSetup)
       {
-        Serial.println("WiFi setup: " + String(_inputs.wifiSetup));
+        Serial.println("WiFi setup: " + String(system.inputs.wifiSetup));
       }
 
-      if (_inputs.ldr != prevInputs.ldr)
+      if (system.inputs.ldr != prevInputs.ldr)
       {
-        Serial.println("LDR: " + String(_inputs.ldr));
+        Serial.println("LDR: " + String(system.inputs.ldr));
       }
     }
   }
 
   void loopWifiSetup()
   {
-    if (_status == WIFI_SETUP)
+    if (system.status == WIFI_SETUP)
     {
       WifiSetup::loop();
     }
-  }
-
-  RgbColor getCategoryColor(const category_t category)
-  {
-    switch (category)
-    {
-    case VFR:
-      return Colors::VFR;
-    case MVFR:
-      return Colors::MVFR;
-    case IFR:
-      return Colors::IFR;
-    case LIFR:
-      return Colors::LIFR;
-    case NA:
-      return Colors::BLACK;
-    }
-
-    return Colors::BLACK;
-  }
-
-  void clearStrip()
-  {
-    for (int i = 0; i < Airports::COUNT; i++)
-    {
-      _strip.SetPixelColor(i, Colors::BLACK);
-    }
-  }
-
-  void setStationPixel(int index, RgbColor color)
-  {
-    _strip.SetPixelColor(index, color.Dim(getDesiredBrightness()));
-  }
-
-  void setStatusPixel(RgbColor color)
-  {
-    _strip.SetPixelColor(Config::STATUS_PIXEL_INDEX, color.Dim(Features::MASTER_MAX_BRIGHTNESS));
-  }
-
-  uint8_t getDesiredBrightness()
-  {
-    float userBrightness = (float)_settings.brightness / 100.0;
-    float dimming = 0.0;
-
-    if (false) // auto-dimming
-    {
-      float minBrightness = 0.05;
-      // LDR:
-      //   LDR high (1.0) -> room is bright -> less LED dimming -> bright LEDs
-      //   LDR low (0.0) -> room is dark -> more LED dimming -> dim LEDs
-      //
-      // Min brightness knob:
-      //   Min brightness high (1.0) -> less LED dimming -> bright LEDs
-      //   Min brightness low (0.0) -> more LED dimming -> dim LEDs
-      dimming = (1.0 - _inputs.ldr) * (1.0 - minBrightness);
-    }
-
-    return clamp((userBrightness - dimming) * (float)Features::MASTER_MAX_BRIGHTNESS, Features::MASTER_MIN_BRIGHTNESS, Features::MASTER_MAX_BRIGHTNESS);
-  }
-
-  void loopRedraw()
-  {
-    static inputs_t prevInputs = _inputs;
-    static status_t prevStatus = _status;
-    static unsigned long nextAnimateAt = 0;
-    static unsigned long nextStatusFlashAt = 0;
-    static bool statusFlash = false;
-
-    // Redraw all if:
-    // - METARs changed (force redraw)
-    // - status changed
-    // - LDR changed
-    // - brightness knobs changed
-    // - dimming setting changed
-    bool statusChanged = prevStatus != _status;
-    bool ldrChanged = prevInputs.ldr != _inputs.ldr;
-    bool redrawAll = _forceRedraw || statusChanged || ldrChanged;
-
-    // Only wipe LEDs on initial status change
-    if (statusChanged)
-    {
-      clearStrip();
-    }
-
-    if (redrawAll)
-    {
-      if (_status == CONNECTED_WITH_DATA)
-      {
-        drawMETARs();
-      }
-    }
-
-    // Flash status LED when we're in a nonfunctional state
-    if (_status != CONNECTED_WITH_DATA && millis() > nextStatusFlashAt)
-    {
-      // Don't flash when trying to reconnect
-      drawStatus(statusFlash);
-      nextStatusFlashAt = millis() + 1000;
-      statusFlash = !statusFlash;
-    }
-
-    // Animate:
-    // - lightning flashes
-    // - windy stations
-    if (_status == CONNECTED_WITH_DATA)
-    {
-      if (millis() > nextAnimateAt)
-      {
-        drawAnimationFrame();
-        nextAnimateAt = millis() + Config::ANIMATION_FRAME_DURATION;
-      }
-    }
-
-    _strip.Show();
-
-    prevInputs = _inputs;
-    prevStatus = _status;
-    _forceRedraw = false;
-  }
-
-  void drawMETARs()
-  {
-    for (int i = 0; i < _metarCount; i++)
-    {
-      metar_t metar = _metars[i];
-
-      setStationPixel(metar.ledIndex, getCategoryColor(metar.category));
-    }
-  }
-
-  void drawAnimationFrame()
-  {
-    // Windy stations
-    for (int i = 0; i < _metarCount; i++)
-    {
-      metar_t metar = _metars[i];
-      if (_settings.wind && max(metar.wind, metar.windGust) > _settings.windy_kts)
-      {
-        bool flicker = random(100) < Config::FLICKER_WIND_PERCENT;
-        if (flicker)
-        {
-          RgbColor flickerColor = getCategoryColor(metar.category).Dim(Config::FLICKER_WIND_DIMMING);
-          setStationPixel(metar.ledIndex, flickerColor);
-        }
-        else
-        {
-          RgbColor color = getCategoryColor(metar.category);
-          setStationPixel(metar.ledIndex, color);
-        }
-      }
-    }
-
-    if (_settings.lightning)
-    {
-      for (int i = 0; i < _metarCount; i++)
-      {
-        metar_t metar = _metars[i];
-        if (!metar.lightning || metar.category == NA)
-        {
-          continue;
-        }
-
-        bool flash = random(100) < Config::FLASH_LIGHTNING_PERCENT;
-        if (flash)
-        {
-          setStationPixel(metar.ledIndex, Colors::LIGHTNING_FLASH);
-        }
-        else
-        {
-          setStationPixel(metar.ledIndex, getCategoryColor(metar.category));
-        }
-      }
-    }
-  }
-
-  void drawStatus(bool flash)
-  {
-    if (flash)
-    {
-      setStatusPixel(Colors::BLACK);
-      return;
-    }
-
-    switch (_status)
-    {
-    case INITIALIZING:
-      Serial.println("INITIALIZING");
-      setStatusPixel(Colors::INITIALIZING);
-      break;
-    case CONNECTED_NO_DATA:
-      Serial.println("CONNECTED_NO_DATA");
-      setStatusPixel(Colors::CONNECTED_NO_DATA);
-      break;
-    case DISCONNECTED:
-      Serial.println("DISCONNECTED");
-      setStatusPixel(Colors::DISCONNECTED);
-      break;
-    case WIFI_SETUP:
-      Serial.println("WIFI_SETUP");
-      setStatusPixel(Colors::WIFI_SETUP);
-      break;
-    }
-  }
-
-  void previewBrightness(int brightness)
-  {
-    uint8_t dimness = (float)brightness / 100.0 * (float)Features::MASTER_MAX_BRIGHTNESS;
-
-    for (int i = 0; i < _metarCount; i++)
-    {
-      if (i == Config::STATUS_PIXEL_INDEX)
-      {
-        continue;
-      }
-
-      _strip.SetPixelColor(i, Colors::GREEN.Dim(dimness));
-    }
-
-    _strip.Show();
   }
 
   void printMetars()
@@ -397,9 +170,9 @@ namespace Main
       return;
     }
 
-    for (int i = 0; i < _metarCount; i++)
+    for (int i = 0; i < system.metarCount; i++)
     {
-      metar_t metar = _metars[i];
+      metar_t metar = system.metars[i];
 
       Serial.print(metar.airportID + ": ");
       switch (metar.category)
@@ -441,9 +214,4 @@ namespace Main
     Serial.println("-----------------------------------");
   }
 
-  void setStatus(status_t status)
-  {
-    _status = status;
-    _forceRedraw = true;
-  }
 }

@@ -1,5 +1,6 @@
 #include "wifi_setup.h"
 #include "secrets.h"
+#include "leds.h"
 #include "main.h"
 
 #include <WiFi.h>
@@ -43,7 +44,7 @@ namespace WifiSetup
         WiFi.softAPdisconnect();
         Serial.println("Soft AP disconnected");
 
-        Secrets::settings_t settings = Secrets::readSettings();
+        settings_t settings = Secrets::readSettings();
         WiFi.begin(settings.ssid, settings.password);
     }
 
@@ -59,7 +60,7 @@ namespace WifiSetup
 
     void handleForm()
     {
-        Secrets::settings_t settings = Secrets::readSettings();
+        settings_t settings = Secrets::readSettings();
         String indexHtml = FPSTR(INDEX_HTML);
 
         replaceValue(indexHtml, "ssid", String(settings.ssid));
@@ -90,7 +91,7 @@ namespace WifiSetup
 
         if (ssid.length() > 0 && password.length() > 0)
         {
-            Secrets::settings_t settings = Secrets::readSettings();
+            settings_t settings = Secrets::readSettings();
             strcpy(settings.ssid, ssid.c_str());
             strcpy(settings.password, password.c_str());
             settings.lightning = lightning == "1";
@@ -110,7 +111,7 @@ namespace WifiSetup
     void handleBrightness()
     {
         String brightness = _server.arg("value");
-        Main::previewBrightness(brightness.toInt());
+        LEDs::previewBrightness(brightness.toInt());
         _server.send(204, "text/plain", "");
     }
 }

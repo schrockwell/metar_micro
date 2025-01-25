@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "board.h"
+
 enum category_t
 {
     NA,
@@ -45,6 +47,25 @@ struct inputs_t
     bool wifiSetup;
 
     float ldr;
+};
+
+struct settings_t
+{
+    char ssid[100];
+    char password[100];
+    bool lightning;
+    bool wind;
+    int windy_kts;
+    int brightness;
+};
+
+struct system_t
+{
+    status_t status = INITIALIZING;
+    inputs_t inputs;
+    metar_t metars[Airports::COUNT];
+    int metarCount;
+    settings_t settings;
 };
 
 #endif
