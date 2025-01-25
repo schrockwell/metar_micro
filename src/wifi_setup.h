@@ -17,6 +17,8 @@ namespace WifiSetup
     void handlePost();
     void handleBrightness();
 
+    String footerHtml();
+
     static const char HEADER_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -34,6 +36,7 @@ namespace WifiSetup
         p.notice { font-size: 1.5em; text-align: center; padding: 1em; }
         .flex-h { display: flex; align-items: center; gap: 0.5em; }
         .flex-v { display: flex; flex-direction: column; gap: 0.5em; }
+        footer { font-size: 0.75em; margin-top: 2em; font-style: italic; }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -47,6 +50,11 @@ namespace WifiSetup
     )rawliteral";
 
     static const char FOOTER_HTML[] PROGMEM = R"rawliteral(
+    <footer>
+        <div>Model: {{model}}</div>
+        <div>Serial: {{serial}}</div>
+        <div>Firmware: {{firmware}}</div>
+    </footer>
 </body>
 </html>
 )rawliteral";

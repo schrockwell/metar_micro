@@ -1,7 +1,8 @@
-#include "wifi_setup.h"
-#include "secrets.h"
+#include "constants.h"
 #include "leds.h"
 #include "main.h"
+#include "secrets.h"
+#include "wifi_setup.h"
 
 #include <WiFi.h>
 #include <WebServer.h>
@@ -69,7 +70,7 @@ namespace WifiSetup
         replaceValue(indexHtml, "windy_kts", String(settings.windy_kts));
         replaceValue(indexHtml, "brightness", String(settings.brightness));
 
-        _server.send(200, "text/html", String(HEADER_HTML) + indexHtml + String(FOOTER_HTML));
+        _server.send(200, "text/html", String(HEADER_HTML) + indexHtml + footerHtml());
     }
 
     void handlePost()
@@ -99,13 +100,24 @@ namespace WifiSetup
             settings.brightness = brightness.toInt();
             Secrets::writeSettings(settings);
 
-            _server.send(200, "text/html", String(HEADER_HTML) + String(SUCCESS_HTML) + String(FOOTER_HTML));
+            _server.send(200, "text/html", String(HEADER_HTML) + String(SUCCESS_HTML) + footerHtml());
             Main::endSetup();
         }
         else
         {
-            _server.send(400, "text/html", String(HEADER_HTML) + String(ERROR_HTML) + String(FOOTER_HTML));
+            _server.send(400, "text/html", String(HEADER_HTML) + String(ERROR_HTML) + footerHtml());
         }
+    }
+
+    String footerHtml()
+    {
+        String html = FPSTR(FOOTER_HTML);
+
+        replaceValue(html, "firmware", Version::FIRMWARE);
+        replaceValue(html, "model", Features::MODEL);
+        replaceValue(html, "serial", Secrets::getSerialString());
+
+        return html;
     }
 
     void handleBrightness()

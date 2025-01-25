@@ -17,6 +17,8 @@ namespace Pins
 
 namespace Features
 {
+    static const String MODEL = "AM-M0406CT-0";
+
     // Analog inputs
     static const bool MAX_BRIGHTNESS_POT = true;
     static const bool MIN_BRIGHTNESS_POT = true;

@@ -16,7 +16,6 @@
 
 void setup()
 {
-  delay(5000);
   Serial.begin(9600);
 
   Secrets::setup();

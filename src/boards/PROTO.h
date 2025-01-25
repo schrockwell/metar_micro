@@ -18,6 +18,8 @@ namespace Pins
 
 namespace Features
 {
+    static const String MODEL = "PROTO";
+
     // Analog inputs
     static const bool MAX_BRIGHTNESS_POT = true;
     static const bool MIN_BRIGHTNESS_POT = true;
