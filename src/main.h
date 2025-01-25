@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <Arduino.h>
+#include <NeoPixelBus.h>
 
 #include "types.h"
 
@@ -32,6 +33,8 @@ namespace Main
     void clearStrip();
     RgbColor getCategoryColor(const category_t category);
     void setStationPixel(int index, RgbColor color);
+    void setStatusPixel(RgbColor color);
+    void previewBrightness(int brightness);
 
     // Debugging
     void printMetars();

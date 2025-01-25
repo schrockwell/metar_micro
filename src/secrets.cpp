@@ -23,12 +23,14 @@ namespace Secrets
 
     void initializeEEPROM()
     {
+        // TODO: Migrate old EEPROM settings if known previous version
         Serial.println("Initializing EEPROM");
 
         settings_t defaultSettings = {
             .ssid = "",
             .password = "",
             .lightning = true,
+            .wind = true,
             .windy_kts = 15,
             .brightness = 50,
         };
@@ -51,48 +53,15 @@ namespace Secrets
 
     void writeSignature()
     {
-        for (int i = 0; i < sizeof(SIGNATURE); ++i)
-        {
-            EEPROM.write(SIGNATURE_ADDR + i, (SIGNATURE >> (8 * i)) & 0xFF);
-        }
+        EEPROM.put(SIGNATURE_ADDR, SIGNATURE);
         EEPROM.commit();
     }
 
     bool checkSignature()
     {
         uint32_t readSignature = 0;
-        for (int i = 0; i < sizeof(SIGNATURE); ++i)
-        {
-            readSignature |= (uint32_t)EEPROM.read(SIGNATURE_ADDR + i) << (8 * i);
-        }
+        EEPROM.get(SIGNATURE_ADDR, readSignature);
         return readSignature == SIGNATURE;
-    }
-
-    void writeToEEPROM(int startAddr, const String &data)
-    {
-        int i;
-        for (i = 0; i < data.length(); ++i)
-        {
-            EEPROM.write(startAddr + i, data[i]);
-        }
-        EEPROM.write(startAddr + i, '\0'); // Add null terminator to mark end of string
-        EEPROM.commit();                   // Make sure to commit changes to EEPROM
-    }
-
-    String readFromEEPROM(int startAddr)
-    {
-        String result;
-        char ch;
-        while (true)
-        {
-            ch = EEPROM.read(startAddr++);
-            if (ch == '\0')
-            {
-                break;
-            }
-            result += ch;
-        }
-        return result;
     }
 
     uint64_t getSerial()

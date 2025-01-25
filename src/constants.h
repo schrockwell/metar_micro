@@ -48,6 +48,7 @@ namespace Config
     static const uint FLICKER_WIND_PERCENT = 20;      // %
     static const uint FLICKER_WIND_DIMMING = 128;     // 255 = original, 0 = black
     static const uint FLASH_LIGHTNING_PERCENT = 5;    // %
+    static const uint STATUS_PIXEL_INDEX = 0;
 
     // Timing
     static const uint METAR_FETCH_INTERVAL = 300000; // 5 minutes (after successful fetch)

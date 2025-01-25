@@ -4,7 +4,6 @@
 
 namespace Pins
 {
-    static const uint STATUS_LED = 0;
     static const uint NEOPIXEL = 16;
     static const uint MAX_BRIGHTNESS_POT = A1;
     static const uint MIN_BRIGHTNESS_POT = A0;
@@ -33,8 +32,8 @@ namespace Features
     //   64  -> 160 mA
     //   32  -> 60 mA
     // (+100 mA for Pico)
-    static const uint8_t MASTER_MIN_BRIGHTNESS = 2;  // 0-255
-    static const uint8_t MASTER_MAX_BRIGHTNESS = 64; // 0-255
+    static const uint8_t MASTER_MIN_BRIGHTNESS = 2;   // 0-255
+    static const uint8_t MASTER_MAX_BRIGHTNESS = 255; // 0-255
 
     // Switches
     static const bool FORCE_WINDS = false;

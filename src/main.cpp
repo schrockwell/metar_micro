@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <NeoPixelBus.h>
 #include <WiFi.h>
-#include <LEAmDNS.h>
 
 #include "airports.h"
 #include "board.h"
@@ -16,6 +15,7 @@
 
 void setup()
 {
+  delay(5000);
   Serial.begin(9600);
 
   Secrets::setup();
@@ -25,10 +25,6 @@ void setup()
   Main::setupStrip();
   Inputs::setup();
 
-  MDNS.begin("airmap");
-  MDNS.addService("http", "tcp", 80);
-  MDNS.announce();
-
   Main::loopInputs();
   Main::loopRedraw();
 
@@ -37,8 +33,6 @@ void setup()
 
 void loop()
 {
-  MDNS.update();
-
   Main::loopInputs();
   Main::loopMETARFetch();
   Main::loopRedraw();
@@ -209,6 +203,11 @@ namespace Main
     _strip.SetPixelColor(index, color.Dim(getDesiredBrightness()));
   }
 
+  void setStatusPixel(RgbColor color)
+  {
+    _strip.SetPixelColor(Config::STATUS_PIXEL_INDEX, color.Dim(Features::MASTER_MAX_BRIGHTNESS));
+  }
+
   uint8_t getDesiredBrightness()
   {
     float userBrightness = (float)_settings.brightness / 100.0;
@@ -244,9 +243,15 @@ namespace Main
     // - LDR changed
     // - brightness knobs changed
     // - dimming setting changed
-    bool redrawAll = _forceRedraw ||
-                     prevStatus != _status ||
-                     prevInputs.ldr != _inputs.ldr;
+    bool statusChanged = prevStatus != _status;
+    bool ldrChanged = prevInputs.ldr != _inputs.ldr;
+    bool redrawAll = _forceRedraw || statusChanged || ldrChanged;
+
+    // Only wipe LEDs on initial status change
+    if (statusChanged)
+    {
+      clearStrip();
+    }
 
     if (redrawAll)
     {
@@ -257,7 +262,7 @@ namespace Main
     }
 
     // Flash status LED when we're in a nonfunctional state
-    if (_status != DISCONNECTED && _status != CONNECTED_WITH_DATA && millis() > nextStatusFlashAt)
+    if (_status != CONNECTED_WITH_DATA && millis() > nextStatusFlashAt)
     {
       // Don't flash when trying to reconnect
       drawStatus(statusFlash);
@@ -300,7 +305,7 @@ namespace Main
     for (int i = 0; i < _metarCount; i++)
     {
       metar_t metar = _metars[i];
-      if (_settings.windy_kts > 0 && max(metar.wind, metar.windGust) > _settings.windy_kts)
+      if (_settings.wind && max(metar.wind, metar.windGust) > _settings.windy_kts)
       {
         bool flicker = random(100) < Config::FLICKER_WIND_PERCENT;
         if (flicker)
@@ -341,11 +346,9 @@ namespace Main
 
   void drawStatus(bool flash)
   {
-    clearStrip();
-
     if (flash)
     {
-      setStationPixel(Pins::STATUS_LED, Colors::BLACK);
+      setStatusPixel(Colors::BLACK);
       return;
     }
 
@@ -353,21 +356,38 @@ namespace Main
     {
     case INITIALIZING:
       Serial.println("INITIALIZING");
-      setStationPixel(Pins::STATUS_LED, Colors::INITIALIZING);
+      setStatusPixel(Colors::INITIALIZING);
       break;
     case CONNECTED_NO_DATA:
       Serial.println("CONNECTED_NO_DATA");
-      setStationPixel(Pins::STATUS_LED, Colors::CONNECTED_NO_DATA);
+      setStatusPixel(Colors::CONNECTED_NO_DATA);
       break;
     case DISCONNECTED:
       Serial.println("DISCONNECTED");
-      setStationPixel(Pins::STATUS_LED, Colors::DISCONNECTED);
+      setStatusPixel(Colors::DISCONNECTED);
       break;
     case WIFI_SETUP:
       Serial.println("WIFI_SETUP");
-      setStationPixel(Pins::STATUS_LED, Colors::WIFI_SETUP);
+      setStatusPixel(Colors::WIFI_SETUP);
       break;
     }
+  }
+
+  void previewBrightness(int brightness)
+  {
+    uint8_t dimness = (float)brightness / 100.0 * (float)Features::MASTER_MAX_BRIGHTNESS;
+
+    for (int i = 0; i < _metarCount; i++)
+    {
+      if (i == Config::STATUS_PIXEL_INDEX)
+      {
+        continue;
+      }
+
+      _strip.SetPixelColor(i, Colors::GREEN.Dim(dimness));
+    }
+
+    _strip.Show();
   }
 
   void printMetars()
