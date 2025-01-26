@@ -42,6 +42,7 @@ namespace Secrets
     void writeSettings(settings_t settings)
     {
         EEPROM.put(SETTINGS_ADDR, settings);
+        EEPROM.commit();
     }
 
     settings_t readSettings()
