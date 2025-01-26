@@ -15,16 +15,6 @@ namespace Inputs
         pinMode(Pins::DIP_DIMMING, INPUT_PULLUP);
         pinMode(Pins::DIP_WIFI_SETUP, INPUT_PULLUP);
 
-        if (Features::MAX_BRIGHTNESS_POT)
-        {
-            pinMode(Pins::MAX_BRIGHTNESS_POT, INPUT);
-        }
-
-        if (Features::MIN_BRIGHTNESS_POT)
-        {
-            pinMode(Pins::MIN_BRIGHTNESS_POT, INPUT);
-        }
-
         if (Features::LDR)
         {
             pinMode(Pins::LDR, INPUT);
@@ -40,7 +30,7 @@ namespace Inputs
 
         debounce(LONG_PRESS_DELAY, !digitalRead(Pins::DIP_WIFI_SETUP), wifiSetup, wifiSetupPrevMillis);
 
-        inputs.wifiSetup = wifiSetup || Features::FORCE_WIFI_SETUP;
+        inputs.wifiSetup = wifiSetup;
 
         float ldr = Features::LDR ? analogRead(Pins::LDR) / 1024.0 : Features::DEFAULT_LDR;
 

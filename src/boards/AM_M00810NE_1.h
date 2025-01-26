@@ -6,8 +6,8 @@ namespace Pins
 {
     static const uint STATUS_LED = 0;
     static const uint NEOPIXEL = 16;
-    static const uint MAX_BRIGHTNESS_POT = A1;
-    static const uint MIN_BRIGHTNESS_POT = A0;
+    // static const uint MAX_BRIGHTNESS_POT = A1; // Not used
+    // static const uint MIN_BRIGHTNESS_POT = A0; // Not used
     static const uint LDR = A2;
 
     static const uint DIP_WIND = 5;
@@ -21,13 +21,11 @@ namespace Features
     static const String MODEL = "AM-M00810NE-1";
 
     // Analog inputs
-    static const bool MAX_BRIGHTNESS_POT = true;
-    static const bool MIN_BRIGHTNESS_POT = true;
     static const bool LDR = true;
 
-    static const float DEFAULT_MAX_BRIGHTNESS = 1.0;
-    static const float DEFAULT_MIN_BRIGHTNESS = 1.0;
-    static const float DEFAULT_LDR = 1.0;
+    // Defaults
+    static const float DEFAULT_LDR = 1.0;         // 0-1
+    static const uint8_t DEFAULT_BRIGHTNESS = 20; // 0-100
 
     // LED current draw (~12 mA per LED at full brightness):
     //   255 -> 710 mA
@@ -37,13 +35,6 @@ namespace Features
     // (+100 mA for Pico)
     static const uint8_t MASTER_MIN_BRIGHTNESS = 2;  // 0-255
     static const uint8_t MASTER_MAX_BRIGHTNESS = 64; // 0-255
-    static const uint8_t DEFAULT_BRIGHTNESS = 10;    // 0-100
-
-    // Switches
-    static const bool FORCE_WINDS = false;
-    static const bool FORCE_LIGHTNING = false;
-    static const bool FORCE_DIMMING = false;
-    static const bool FORCE_WIFI_SETUP = false;
 }
 
 namespace Airports
