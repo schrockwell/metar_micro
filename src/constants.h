@@ -56,4 +56,9 @@ namespace Config
     static const uint WIFI_RETRY_INTERVAL = 60000;   // 1 minute (after no wifi config)
 }
 
+namespace Pins
+{
+    static const uint NC = UINT_MAX;
+}
+
 #endif

@@ -52,7 +52,8 @@ namespace WifiSetup
     static const char FOOTER_HTML[] PROGMEM = R"rawliteral(
     <footer>
         <div>Model: {{model}}</div>
-        <div>Serial: {{serial}}</div>
+        <div>Controller Serial: {{cserial}}</div>
+        <div>Map Serial: {{mserial}}</div>
         <div>Firmware: {{firmware}}</div>
     </footer>
 </body>

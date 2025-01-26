@@ -27,8 +27,6 @@ void setup()
 
   Main::loopInputs();
   LEDs::loopRedraw();
-
-  Serial.println("Serial number: " + Secrets::getSerialString());
 }
 
 void loop()

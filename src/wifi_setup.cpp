@@ -116,7 +116,8 @@ namespace WifiSetup
 
         replaceValue(html, "firmware", Version::FIRMWARE);
         replaceValue(html, "model", Features::MODEL);
-        replaceValue(html, "serial", Secrets::getSerialString());
+        replaceValue(html, "cserial", Secrets::getSerialString(Secrets::getControllerSerial()));
+        replaceValue(html, "mserial", Secrets::getSerialString(Secrets::getMapSerial()));
 
         return html;
     }

@@ -30,9 +30,11 @@ namespace Secrets
     void writeSignature();
     bool checkSignature();
 
-    uint64_t getSerial();
+    uint64_t getControllerSerial();
+    uint64_t getMapSerial();
     uint64_t getSerialFromPico();
-    String getSerialString();
+    uint64_t getSerialFromDS2401(uint pin);
+    String getSerialString(uint64_t serial);
 }
 
 #endif // SECRETS_H

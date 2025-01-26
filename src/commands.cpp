@@ -50,6 +50,7 @@ namespace Commands
             Serial.println("Commands:");
             Serial.println("  b / brightness [0-100] - Set the brightness (0-100)");
             Serial.println("  f / fetch - Fetch METARs immediately");
+            Serial.println("  i / info - Print device info");
             Serial.println("  m / metars - Print METARs");
             Serial.println("  r / reboot - Reboot the device");
             Serial.println("  s / setup - Enter or exit setup mode");
@@ -90,6 +91,13 @@ namespace Commands
         else if (command == "setup" || command == "s")
         {
             Main::toggleSetup();
+        }
+        else if (command == "info" || command == "i")
+        {
+            Serial.println("Model: " + String(Features::MODEL));
+            Serial.println("Controller Serial: " + Secrets::getSerialString(Secrets::getControllerSerial()));
+            Serial.println("Map Serial: " + Secrets::getSerialString(Secrets::getMapSerial()));
+            Serial.println("Firmware: " + String(Version::FIRMWARE));
         }
         else if (command == "")
         {

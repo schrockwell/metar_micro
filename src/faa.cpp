@@ -72,6 +72,6 @@ namespace FAA
 
   String buildAPIURL()
   {
-    return String(API_BASE_URL) + "/api/devices/" + Secrets::getSerialString() + "/metars";
+    return String(API_BASE_URL) + "/api/devices/" + Secrets::getSerialString(Secrets::getControllerSerial()) + "/metars";
   }
 }

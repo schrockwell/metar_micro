@@ -14,6 +14,9 @@ namespace Pins
     static const uint DIP_LIGHTNING = 6;
     static const uint DIP_DIMMING = 7;
     static const uint DIP_WIFI_SETUP = 8;
+
+    static const uint CONTROLLER_DS2401 = NC;
+    static const uint MAP_DS2401 = NC;
 }
 
 namespace Features

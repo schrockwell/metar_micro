@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <OneWire.h>
 
 namespace Secrets
 {
@@ -65,15 +66,33 @@ namespace Secrets
         return readSignature == SIGNATURE;
     }
 
-    uint64_t getSerial()
+    uint64_t getControllerSerial()
     {
-        return getSerialFromPico();
+        if (Pins::CONTROLLER_DS2401 == Pins::NC)
+        {
+            return getSerialFromPico();
+        }
+        else
+        {
+            return getSerialFromDS2401(Pins::CONTROLLER_DS2401);
+        }
     }
 
-    String getSerialString()
+    uint64_t getMapSerial()
+    {
+        if (Pins::MAP_DS2401 == Pins::NC)
+        {
+            return 0;
+        }
+        else
+        {
+            return getSerialFromDS2401(Pins::MAP_DS2401);
+        }
+    }
+
+    String getSerialString(uint64_t serial)
     {
         // convert serial to 0000-0000-0000 format
-        uint64_t serial = getSerial();
         char serialStr[16];
         snprintf(serialStr, sizeof(serialStr), "%04X-%04X-%04X", (uint16_t)(serial >> 32), (uint16_t)(serial >> 16), (uint16_t)serial);
         return String(serialStr);
@@ -84,5 +103,20 @@ namespace Secrets
         pico_unique_board_id_t id;
         pico_get_unique_board_id(&id);
         return *(uint64_t *)id.id & 0x0000FFFFFFFFFFFF;
+    }
+
+    uint64_t getSerialFromDS2401(uint pin)
+    {
+        OneWire oneWire(pin);
+        uint64_t serial = 0;
+        if (oneWire.reset())
+        {
+            oneWire.write(0x33);
+            for (int i = 0; i < 8; i++)
+            {
+                serial |= (uint64_t)oneWire.read() << (i * 8);
+            }
+        }
+        return serial;
     }
 }
