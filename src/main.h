@@ -28,6 +28,7 @@ namespace Main
 
     // State management
     void setStatus(status_t status);
+    void fetchAsap();
 
     // Setup
     void beginSetup();

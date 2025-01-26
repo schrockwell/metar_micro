@@ -26,6 +26,7 @@ namespace LEDs
     void setStatus(status_t status);
     void setStatusPixel(RgbColor color);
     void previewBrightness(int brightness);
+    void forceRedraw();
 }
 
 #endif

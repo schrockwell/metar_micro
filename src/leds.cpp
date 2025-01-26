@@ -189,6 +189,11 @@ namespace LEDs
         _forceRedraw = true;
     }
 
+    void forceRedraw()
+    {
+        _forceRedraw = true;
+    }
+
     void clearStrip(bool show)
     {
         for (int i = 0; i < Airports::COUNT; i++)

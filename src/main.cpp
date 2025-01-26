@@ -4,6 +4,7 @@
 
 #include "airports.h"
 #include "board.h"
+#include "commands.h"
 #include "constants.h"
 #include "inputs.h"
 #include "faa.h"
@@ -37,6 +38,7 @@ void loop()
   Main::loopMETARFetch();
   LEDs::loopRedraw();
   Main::loopWifiSetup();
+  Commands::loop();
 }
 
 namespace Main
@@ -113,6 +115,11 @@ namespace Main
     }
   }
 
+  void fetchAsap()
+  {
+    _retryFetchAfter = 0;
+  }
+
   void setStatus(status_t status)
   {
     system.status = status;
@@ -181,6 +188,8 @@ namespace Main
       return;
     }
 
+    Serial.println("Fetched " + String(system.metarCount) + "/" + String(Airports::COUNT) + " METARs");
+
     for (int i = 0; i < system.metarCount; i++)
     {
       metar_t metar = system.metars[i];
@@ -224,5 +233,4 @@ namespace Main
 
     Serial.println("-----------------------------------");
   }
-
 }
