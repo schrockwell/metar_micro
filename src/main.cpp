@@ -2,7 +2,6 @@
 #include <NeoPixelBus.h>
 #include <WiFi.h>
 
-#include "airports.h"
 #include "board.h"
 #include "commands.h"
 #include "constants.h"
@@ -193,30 +192,37 @@ namespace Main
 
   void printMetars()
   {
-    Serial.println("Fetched " + String(system.metarCount) + "/" + String(Airports::COUNT) + " METARs");
-
     for (int i = 0; i < system.metarCount; i++)
     {
       metar_t metar = system.metars[i];
 
-      Serial.print(metar.airportID + ": ");
-      switch (metar.category)
+      Serial.print(metar.airportID);
+      Serial.print(": ");
+
+      if (metar.fetched)
       {
-      case VFR:
-        Serial.print("VFR");
-        break;
-      case MVFR:
-        Serial.print("MVFR");
-        break;
-      case IFR:
-        Serial.print("IFR");
-        break;
-      case LIFR:
-        Serial.print("LIFR");
-        break;
-      case NA:
-        Serial.print("N/A");
-        break;
+        switch (metar.category)
+        {
+        case VFR:
+          Serial.print("VFR");
+          break;
+        case MVFR:
+          Serial.print("MVFR");
+          break;
+        case IFR:
+          Serial.print("IFR");
+          break;
+        case LIFR:
+          Serial.print("LIFR");
+          break;
+        case NA:
+          Serial.print("N/A");
+          break;
+        }
+      }
+      else
+      {
+        Serial.print("Not fetched");
       }
 
       Serial.print(" (" + String(metar.visibility) + " mi, " +
@@ -235,6 +241,42 @@ namespace Main
 
       Serial.println(")");
     }
+
+    int fetchedCount = 0;
+    for (int i = 0; i < system.metarCount; i++)
+    {
+      metar_t metar = system.metars[i];
+      if (metar.fetched)
+      {
+        fetchedCount++;
+      }
+    }
+
+    Serial.println("Fetched " + String(fetchedCount) + "/" + String(system.metarCount) + " METARs");
+
+    Serial.print("Not fetched: ");
+    for (int i = 0; i < system.metarCount; i++)
+    {
+      metar_t metar = system.metars[i];
+      if (!metar.fetched)
+      {
+        Serial.print(metar.airportID);
+        Serial.print(" ");
+      }
+    }
+    Serial.println();
+
+    Serial.print("Unknown category: ");
+    for (int i = 0; i < system.metarCount; i++)
+    {
+      metar_t metar = system.metars[i];
+      if (metar.fetched && metar.category == NA)
+      {
+        Serial.print(metar.airportID);
+        Serial.print(" ");
+      }
+    }
+    Serial.println();
 
     Serial.println("-----------------------------------");
   }

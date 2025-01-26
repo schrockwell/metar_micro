@@ -31,8 +31,7 @@ enum data_source_t
 
 struct metar_t
 {
-    String raw;
-    String airportID;
+    const char *airportID;
     int visibility;
     int ceiling;
     category_t category;
@@ -40,6 +39,7 @@ struct metar_t
     int ledIndex;
     int wind;
     int windGust;
+    bool fetched;
 };
 
 struct inputs_t

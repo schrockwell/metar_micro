@@ -5,15 +5,26 @@ namespace METARS
   void parseMETARs(String payload, metar_t *metars, int metarCount)
   {
     // Split payload into METARs
-    String metarStrings[metarCount];
+    String metarString;
     int metarIndex = 0;
     int startIndex = 0;
+
+    // Reinitialize all METARs
+    for (int i = 0; i < metarCount; i++)
+    {
+      metars[i].fetched = false;
+      metars[i].category = NA;
+    }
+
+    // Parse each line
     for (int i = 0; i < payload.length(); i++)
     {
       if (payload[i] == '\n')
       {
-        metarStrings[metarIndex++] = payload.substring(startIndex, i);
+        metarString = payload.substring(startIndex, i);
         startIndex = i + 1;
+
+        parseMETAR(metarString, metars, metarCount);
       }
 
       // Ignore excessive METARs
@@ -22,16 +33,12 @@ namespace METARS
         break;
       }
     }
-
-    // Parse each METAR
-    for (int i = 0; i < metarCount; i++)
-    {
-      parseMETAR(metarStrings[i], metars, metarCount);
-    }
   }
 
   void parseMETAR(String metarString, metar_t *metars, int metarCount)
   {
+    metarString.trim();
+
     // Split METAR into words
     String words[50]; // Assuming a METAR won't have more than 50 words
     int wordCount = 0;
@@ -41,10 +48,11 @@ namespace METARS
       if (metarString[i] == ' ')
       {
         words[wordCount++] = metarString.substring(startIndex, i);
-        startIndex = i + 1;
+        startIndex = i + 1; // Skip the space
       }
       else if (i == metarString.length() - 1)
       {
+        // Last word
         words[wordCount++] = metarString.substring(startIndex);
       }
 
@@ -73,7 +81,7 @@ namespace METARS
 
     // Extract information
     metar_t newMetar = metars[metarIndex];
-    newMetar.raw = metarString;
+    newMetar.fetched = true;
     newMetar.visibility = -1;
     newMetar.ceiling = 10000; // Default to high value if not found
     newMetar.lightning = false;
