@@ -83,7 +83,10 @@ namespace Main
     {
       if (FAA::fetchMETARs(data_source_t::FAA_SOURCE, system.metars, system.metarCount))
       {
-        printMetars();
+        if (Debug::PRINT_METARS)
+        {
+          printMetars();
+        }
         setStatus(CONNECTED_WITH_DATA);
         _retryFetchAfter = millis() + Config::METAR_FETCH_INTERVAL;
       }
@@ -153,12 +156,14 @@ namespace Main
 
   void beginSetup()
   {
+    Serial.println("Entering setup mode");
     setStatus(WIFI_SETUP);
     WifiSetup::begin();
   }
 
   void endSetup()
   {
+    Serial.println("Exiting setup mode");
     LEDs::clearStrip();
     setStatus(INITIALIZING);
     WifiSetup::end();
@@ -188,11 +193,6 @@ namespace Main
 
   void printMetars()
   {
-    if (!Debug::PRINT_METARS)
-    {
-      return;
-    }
-
     Serial.println("Fetched " + String(system.metarCount) + "/" + String(Airports::COUNT) + " METARs");
 
     for (int i = 0; i < system.metarCount; i++)

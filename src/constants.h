@@ -11,8 +11,8 @@ namespace Version
 
 namespace Debug
 {
-    static const bool PRINT_METARS = true;
-    static const bool PRINT_INPUTS = true;
+    static const bool PRINT_METARS = false;
+    static const bool PRINT_INPUTS = false;
 }
 
 namespace Colors
