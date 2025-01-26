@@ -215,23 +215,27 @@ namespace Main
         case LIFR:
           Serial.print("LIFR");
           break;
-        case NA:
-          Serial.print("N/A");
+        case UNKNOWN:
+          Serial.print("UNK");
           break;
         }
       }
       else
       {
-        Serial.print("Not fetched");
+        Serial.println("Not fetched");
+        continue;
       }
 
-      Serial.print(" (" + String(metar.visibility) + " mi, " +
-                   String(metar.ceiling) + " ft, " +
-                   String(metar.wind) + " kt ");
+      Serial.print(" (" + String(metar.visibility) + "mi, " +
+                   String(metar.ceiling) + "ft, ");
 
-      if (metar.windGust > 0)
+      if (metar.windGust == 0)
       {
-        Serial.print(" gusting " + String(metar.windGust) + " kt");
+        Serial.print(String(metar.wind) + "kt");
+      }
+      else
+      {
+        Serial.print(String(metar.wind) + "-" + String(metar.windGust) + "kt");
       }
 
       if (metar.lightning)
@@ -270,7 +274,7 @@ namespace Main
     for (int i = 0; i < system.metarCount; i++)
     {
       metar_t metar = system.metars[i];
-      if (metar.fetched && metar.category == NA)
+      if (metar.fetched && metar.category == UNKNOWN)
       {
         Serial.print(metar.airportID);
         Serial.print(" ");

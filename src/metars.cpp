@@ -13,7 +13,7 @@ namespace METARS
     for (int i = 0; i < metarCount; i++)
     {
       metars[i].fetched = false;
-      metars[i].category = NA;
+      metars[i].category = UNKNOWN;
     }
 
     // Parse each line
@@ -152,7 +152,7 @@ namespace METARS
   {
     if (visibility == -1)
     {
-      return NA;
+      return UNKNOWN;
     }
     else if (visibility < 1 || ceiling < 500)
     {

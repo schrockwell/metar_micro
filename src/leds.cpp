@@ -116,7 +116,7 @@ namespace LEDs
             for (int i = 0; i < Main::system.metarCount; i++)
             {
                 metar_t metar = Main::system.metars[i];
-                if (!metar.lightning || metar.category == NA)
+                if (!metar.lightning || metar.category == UNKNOWN)
                 {
                     continue;
                 }
@@ -242,7 +242,7 @@ namespace LEDs
             return Colors::IFR;
         case LIFR:
             return Colors::LIFR;
-        case NA:
+        case UNKNOWN:
             return Colors::BLACK;
         }
 

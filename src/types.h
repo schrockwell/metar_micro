@@ -7,7 +7,7 @@
 
 enum category_t
 {
-    NA,
+    UNKNOWN,
     VFR,
     MVFR,
     IFR,
