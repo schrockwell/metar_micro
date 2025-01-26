@@ -32,7 +32,7 @@ namespace Secrets
             .lightning = true,
             .wind = true,
             .windy_kts = 15,
-            .brightness = 50,
+            .brightness = Features::DEFAULT_BRIGHTNESS,
         };
 
         writeSettings(defaultSettings);

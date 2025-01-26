@@ -32,6 +32,7 @@ namespace Features
     // LEDs
     static const uint8_t MASTER_MIN_BRIGHTNESS = 10;  // 0-255
     static const uint8_t MASTER_MAX_BRIGHTNESS = 255; // 0-255
+    static const uint8_t DEFAULT_BRIGHTNESS = 50;     // 0-100
 
     // Switches
     static const bool FORCE_WINDS = false;
