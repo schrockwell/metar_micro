@@ -33,6 +33,7 @@ namespace Main
     // Setup
     void beginSetup();
     void endSetup();
+    void toggleSetup();
 }
 
 #endif

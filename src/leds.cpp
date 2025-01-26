@@ -145,19 +145,15 @@ namespace LEDs
         switch (Main::system.status)
         {
         case INITIALIZING:
-            Serial.println("INITIALIZING");
             setStatusPixel(Colors::INITIALIZING);
             break;
         case CONNECTED_NO_DATA:
-            Serial.println("CONNECTED_NO_DATA");
             setStatusPixel(Colors::CONNECTED_NO_DATA);
             break;
         case DISCONNECTED:
-            Serial.println("DISCONNECTED");
             setStatusPixel(Colors::DISCONNECTED);
             break;
         case WIFI_SETUP:
-            Serial.println("WIFI_SETUP");
             setStatusPixel(Colors::WIFI_SETUP);
             break;
         }

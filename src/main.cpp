@@ -134,14 +134,7 @@ namespace Main
     // Long-press on setup button => toggle setup mode
     if (system.inputs.wifiSetup && system.inputs.wifiSetup != prevInputs.wifiSetup)
     {
-      if (system.status == WIFI_SETUP)
-      {
-        endSetup();
-      }
-      else
-      {
-        beginSetup();
-      }
+      toggleSetup();
     }
 
     if (Debug::PRINT_INPUTS)
@@ -171,6 +164,18 @@ namespace Main
     WifiSetup::end();
     system.settings = Secrets::readSettings();
     _retryFetchAfter = 0;
+  }
+
+  void toggleSetup()
+  {
+    if (system.status == WIFI_SETUP)
+    {
+      endSetup();
+    }
+    else
+    {
+      beginSetup();
+    }
   }
 
   void loopWifiSetup()

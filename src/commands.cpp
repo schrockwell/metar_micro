@@ -52,6 +52,7 @@ namespace Commands
             Serial.println("  f / fetch - Fetch METARs immediately");
             Serial.println("  m / metars - Print METARs");
             Serial.println("  r / reboot - Reboot the device");
+            Serial.println("  s / setup - Enter or exit setup mode");
         }
         else if (command == "metars" || command == "m")
         {
@@ -64,6 +65,10 @@ namespace Commands
         else if (command == "fetch" || command == "f")
         {
             Main::fetchAsap();
+        }
+        else if (command == "brightness" || command == "b")
+        {
+            Serial.println("Current brightness: " + String(Main::system.settings.brightness));
         }
         else if (command.startsWith("brightness ") || command.startsWith("b "))
         {
@@ -79,8 +84,12 @@ namespace Commands
                 Main::system.settings.brightness = brightness;
                 Secrets::writeSettings(Main::system.settings);
                 LEDs::forceRedraw();
-                Serial.println("Brightness set to " + String(brightness));
+                Serial.println("Brightness set to " + String(Main::system.settings.brightness));
             }
+        }
+        else if (command == "setup" || command == "s")
+        {
+            Main::toggleSetup();
         }
         else if (command == "")
         {
